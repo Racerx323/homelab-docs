@@ -1,4 +1,4 @@
-# Contributing to homelab-server-configs
+# Contributing to homelab-docs
 
 [code-of-conduct]: CODE_OF_CONDUCT.md
 [security-policy]: SECURITY.md

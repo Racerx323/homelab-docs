@@ -1,0 +1,82 @@
+name: "❓ Ask a Question"
+description: "Have a general question? Ask it here."
+title: "[Question] "
+labels: ["question", "needs triage"]
+assignees:
+  - Racerx323
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in the project! 
+        
+        Please use this template to ask your question. The more details you provide, the faster we can help you.
+        
+        **Note:** Please check the documentation and search for existing issues before submitting a new one.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: "Your Question"
+      description: "Please provide a clear and concise description of your question."
+      placeholder: "How do I achieve X with Y feature?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Additional Context or Goal"
+      description: "What are you trying to accomplish? Add any other context about the problem here. Screenshots or diagrams can be helpful!"
+      placeholder: "I'm trying to build a new component that does [...], and I'm stuck on how to handle the state."
+
+  - type: textarea
+    id: research
+    attributes:
+      label: "What have you tried?"
+      description: "Describe what you've already tried to find a solution. This helps us avoid suggesting things you've already done."
+      placeholder: "I have read the documentation on [...], and I searched for issues with the keywords [...]."
+    validations:
+      required: true
+
+  - type: textarea
+    id: code-example
+    attributes:
+      label: "Relevant Code Snippet"
+      description: "If applicable, add a minimal, reproducible code snippet to help explain your question. Please format it correctly."
+      render: shell
+      placeholder: |
+        ```javascript
+        // your code here
+        ```
+
+  - type: input
+    id: version
+    attributes:
+      label: "Project Version"
+      description: "What version of our project are you using?"
+      placeholder: "e.g., v2.5.1"
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Your Environment"
+      description: "Please provide any relevant details about your environment."
+      value: |
+        - OS: [e.g. macOS, Windows, Ubuntu]
+        - Browser: [e.g. Chrome, Firefox, Safari]
+        - Node.js Version: [e.g. 18.x]
+        - Other: [Any other relevant dependencies or tools]
+
+  - type: checkboxes
+    id: pre-submission
+    attributes:
+      label: "Pre-submission Checklist"
+      description: "Please verify the following before submitting."
+      options:
+        - label: "I have searched the [existing issues](https://github.com/Racerx323/homelab-docs/issues) and have not found a similar question."
+          required: true
+        - label: "I have read the relevant documentation."
+          required: false
+        - label: "I agree to follow this project's Code of Conduct."
+          required: true

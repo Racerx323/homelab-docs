@@ -3,3 +3,10 @@
 *.bak
 *.DS_Store
 Thumbs.db
+
+
+#vexp
+.vexp/index.lock
+.vexp/index.db-shm
+.vexp/index.db-wal
+.vexp/index.db

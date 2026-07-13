@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "vexp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/aaron/.nvm/versions/node/v26.4.0/lib/node_modules/vexp-cli/mcp/mcp-server.cjs"
+      ],
+      "env": {
+        "VEXP_WORKSPACE": "/home/aaron/code/homelab-docs"
+      }
+    }
+  }
+}

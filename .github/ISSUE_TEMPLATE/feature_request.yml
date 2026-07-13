@@ -1,0 +1,81 @@
+name: "💡 Feature Request"
+description: Suggest an addition or improvement to the project.
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees:
+  - Racerx323
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Your ideas are valuable for improving the project.
+        Please search existing issues before creating a new one to avoid duplicates.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The Problem
+      description: A clear and concise description of the problem this feature will solve. Why is this feature needed?
+      placeholder: I'm always frustrated when [...] because [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: The Proposed Solution
+      description: A clear and concise description of what you want to happen. Consider using a user story format.
+      placeholder: As a [type of user], I want [to perform some task] so that [I can achieve some goal].
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered, and why the proposed solution is better.
+    validations:
+      required: false
+
+  - type: textarea
+    id: visuals
+    attributes:
+      label: Mockups or Visuals (Optional)
+      description: If applicable, add screenshots, mockups, or diagrams to help explain your feature request.
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria (Optional but Recommended)
+      description: A list of criteria that must be met for this feature to be considered complete.
+      placeholder: |
+        - [ ] Given [context], when [I do this], then [this should happen].
+        - [ ] ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the feature request here.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: pre-submission
+    attributes:
+      label: Pre-Submission Checklist
+      description: Please confirm the following before submitting.
+      options:
+        - label: I have searched the [existing issues](https://github.com/Racerx323/homelab-docs/issues) for a similar feature request.
+          required: true
+        - label: I have provided a clear and descriptive title.
+        - label: I have described the problem and my proposed solution.
+        - label: I have considered potential alternatives.
+        - label: I would be willing to submit a Pull Request to fix this issue.
+          required: false
+        - label: I agree to follow this project's Code of Conduct.
+          required: true

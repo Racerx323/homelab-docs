@@ -1,0 +1,101 @@
+name: "🐞 Bug Report"
+description: Create a report to help us improve the project.
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - Racerx323
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for taking the time to fill out this bug report!
+        Please provide a clear and concise description of the issue.
+
+  - type: input
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: e.g. The app crashes when I click the "Save" button.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: input
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: input
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: A clear and concise description of what actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: You can drag and drop images into this area.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide your system and software details.
+      placeholder: |
+        - OS: e.g. Windows 11, Ubuntu 22.04
+        - Browser (if applicable): e.g. Chrome, Firefox, Safari
+        - Software Version: e.g. 22.1.0
+        - Additional info: e.g. CPU, GPU, Network conditions
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste any relevant log output here.
+      render: shell
+      placeholder: |
+        ```text
+        Paste logs here
+        ```
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
+
+  - type: checkboxes
+    id: pre-submission
+    attributes:
+      label: Pre-Submission Checklist
+      options:
+        - label: I have checked the [existing issues](https://github.com/Racerx323/homelab-docs/issues) for a similar bug.
+          required: true
+        - label: I have provided a clear and descriptive title.
+        - label: I have provided detailed steps to reproduce the bug.
+        - label: I have described the expected and actual behavior.
+        - label: I have included relevant logs and/or screenshots.
+        - label: I would be willing to submit a Pull Request to fix this issue.
+          required: false
+        - label: I agree to follow this project's Code of Conduct.
+          required: true

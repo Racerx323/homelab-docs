@@ -8,10 +8,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for your interest in the project! 
-        
+        Thanks for your interest in the project!
+
         Please use this template to ask your question. The more details you provide, the faster we can help you.
-        
+
         **Note:** Please check the documentation and search for existing issues before submitting a new one.
 
   - type: textarea

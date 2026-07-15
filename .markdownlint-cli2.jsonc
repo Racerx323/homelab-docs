@@ -1,0 +1,15 @@
+{
+  "config": {
+    "MD013": false
+  },
+  "ignores": [
+    ".vexp/**",
+    "**/.vexp/**",
+    ".agents/**",
+    "**/.agents/**",
+    "AGENTS.md",
+    "**/AGENTS.md",
+    ".github/copilot-instructions.md",
+    "LICENSE.md"
+  ]
+}

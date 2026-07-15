@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ignore generated vexp index metadata"
+paths = ['''^\.vexp/''']

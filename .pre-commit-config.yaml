@@ -1,0 +1,46 @@
+---
+minimum_pre_commit_version: "3.6.2"
+default_stages: [pre-commit]
+exclude: (?:^|/)(?:\.vexp|\.agents)/
+
+repos:
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: ShellCheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+
+      - id: shfmt
+        name: shfmt
+        entry: shfmt -d -i 4 -ci
+        language: system
+        types: [shell]
+
+      - id: markdownlint-cli2
+        name: markdownlint-cli2
+        entry: markdownlint-cli2
+        language: system
+        types: [markdown]
+        exclude: >-
+          (?:^|/)AGENTS\.md$|^(?:LICENSE\.md|\.github/copilot-instructions\.md)$
+
+      - id: yamllint
+        name: yamllint
+        entry: yamllint --strict
+        language: system
+        types: [yaml]
+
+      - id: check-json
+        name: Validate JSON with jq
+        entry: jq empty
+        language: system
+        types: [json]
+
+      - id: gitleaks
+        name: Gitleaks
+        entry: gitleaks protect --staged --redact --no-banner
+        language: system
+        pass_filenames: false
+        always_run: true

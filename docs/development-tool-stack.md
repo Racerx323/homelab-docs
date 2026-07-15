@@ -84,6 +84,7 @@ yq --version
 | Gitleaks | 8.16.0 | Detects secrets in staged changes |
 | Trivy | 0.72.0 | Scans Terraform configuration and container images |
 | Podman | 4.9.3 | Builds, runs, and inspects rootless containers |
+| Skopeo | 1.13.3 | Inspects and copies container images without running them |
 
 Gitleaks runs on every pre-commit invocation. Trivy usage is repository
 specific:
@@ -100,6 +101,7 @@ gitleaks protect --staged --redact --no-banner
 trivy config --exit-code 1 --severity HIGH,CRITICAL .
 trivy image --ignore-unfixed --severity HIGH,CRITICAL IMAGE
 podman compose config
+skopeo inspect docker://docker.io/library/alpine:latest
 ```
 
 ## Terraform
@@ -166,9 +168,10 @@ npm install --global markdownlint-cli2 markdown-link-check vexp-cli
 GOBIN="$HOME/.local/bin" go install github.com/mikefarah/yq/v4@latest
 ```
 
-Terraform, TFLint, terraform-docs, Trivy, Gitleaks, Ollama, and Codex should be
-installed from their official release channels. Avoid similarly named packages
-from unrelated projects, especially the Python/jq-wrapper package named `yq`.
+Terraform, TFLint, terraform-docs, Trivy, Gitleaks, Skopeo, Ollama, and Codex
+should be installed from their official release channels. Avoid similarly named
+packages from unrelated projects, especially the Python/jq-wrapper package
+named `yq`.
 
 ## Repository validation coverage
 

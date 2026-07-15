@@ -16,6 +16,7 @@ A central repository for all documentation, diagrams, configurations, and notes 
     - [Self-Hosted Applications](#self-hosted-applications)
   - [🌐 Network Architecture](#-network-architecture)
   - [📁 Repository Structure](#-repository-structure)
+  - [🛠️ Development Tooling](#️-development-tooling)
   - [🗺️ Future Goals \& Roadmap](#️-future-goals--roadmap)
   - [📄 License](#-license)
 
@@ -75,9 +76,16 @@ This repository is organized to keep documentation and configurations easy to fi
 ├── LICENSE.md        # The license for this repository
 ├── diagrams/         # Network diagrams, rack layouts, etc.
 ├── docs/             # Detailed guides, how-tos, and notes
+│   ├── development-tool-stack.md # Shared development and validation tools
 │   ├── setup/        # Initial setup guides for hardware/software
 │   └── services/     # Documentation for specific services
 ```
+
+## 🛠️ Development Tooling
+
+The shared local development, validation, security, container, Terraform, and
+AI-assisted tooling is documented in the
+[Development Tool Stack](../docs/development-tool-stack.md).
 
 ## 🗺️ Future Goals & Roadmap
 

@@ -2,7 +2,7 @@
 
 This document records the shared development and validation tools used across
 the homelab repositories. The primary workstation baseline is Ubuntu 24.04
-under WSL2, with PowerShell 7 on the Windows host for Windows-specific work.
+under WSL2, with PowerShell 7 installed in both Ubuntu and on the Windows host.
 Versions were last verified on July 16, 2026.
 
 The version table is an inventory, not a lock file. Repository configuration,
@@ -50,17 +50,32 @@ shfmt -d -i 4 -ci path/to/script.sh
 bats test/
 ```
 
-## Windows PowerShell development and testing
+## PowerShell development and testing
 
 | Tool | Version or constraint | Purpose |
 | --- | --- | --- |
-| PowerShell | 7.6.3 | Runs and validates Windows automation |
+| PowerShell | 7.6.3 | Runs cross-platform PowerShell and validates Windows automation |
 | Pester | 5.5.0 through 5.99.99 in CI | Tests PowerShell, registry launchers, and task automation |
 | GitHub Actions | `windows-latest` | Runs the Pester regression suite on pull requests and `main` |
 
-PowerShell does not need to be installed inside Ubuntu for the current Windows
-scripts. Run their tests from PowerShell 7 on Windows, using the repository
-through its WSL network path:
+Install PowerShell in Ubuntu 24.04 from the Microsoft package repository:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y wget apt-transport-https software-properties-common
+source /etc/os-release
+wget -q "https://packages.microsoft.com/config/ubuntu/${VERSION_ID}/packages-microsoft-prod.deb"
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+sudo apt-get update
+sudo apt-get install -y powershell
+pwsh --version
+```
+
+This is Microsoft's preferred installation channel and allows PowerShell to be
+updated through APT. Use `pwsh` to start it in Linux. Windows-specific registry
+and Task Scheduler behavior still requires PowerShell 7 on Windows. Run those
+tests from Windows, using the repository through its WSL network path:
 
 ```powershell
 Set-Location \\wsl.localhost\Ubuntu\home\aaron\code\homelab-scripts

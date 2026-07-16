@@ -1,8 +1,9 @@
 # Development Tool Stack
 
 This document records the shared development and validation tools used across
-the homelab repositories. The workstation baseline is Ubuntu 24.04 under WSL2.
-Versions were last verified on July 15, 2026.
+the homelab repositories. The primary workstation baseline is Ubuntu 24.04
+under WSL2, with PowerShell 7 on the Windows host for Windows-specific work.
+Versions were last verified on July 16, 2026.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
@@ -48,6 +49,37 @@ shellcheck path/to/script.sh
 shfmt -d -i 4 -ci path/to/script.sh
 bats test/
 ```
+
+## Windows PowerShell development and testing
+
+| Tool | Version or constraint | Purpose |
+| --- | --- | --- |
+| PowerShell | 7.6.3 | Runs and validates Windows automation |
+| Pester | 5.5.0 through 5.99.99 in CI | Tests PowerShell, registry launchers, and task automation |
+| GitHub Actions | `windows-latest` | Runs the Pester regression suite on pull requests and `main` |
+
+PowerShell does not need to be installed inside Ubuntu for the current Windows
+scripts. Run their tests from PowerShell 7 on Windows, using the repository
+through its WSL network path:
+
+```powershell
+Set-Location \\wsl.localhost\Ubuntu\home\aaron\code\homelab-scripts
+Invoke-Pester -Path @(
+    '.\windows\system-repair\tests\SystemRepairMenu.Tests.ps1'
+    '.\windows\wsl-code-directory-sync\tests\GithubRepoSyncNotify.Tests.ps1'
+) -CI
+```
+
+Windows PowerShell 5.1 includes Pester 3.4.0, but it cannot update that bundled
+copy in place. Install a current stable Pester side by side from PowerShell 7:
+
+```powershell
+Install-Module -Name Pester -Scope CurrentUser -Force -SkipPublisherCheck
+```
+
+The `homelab-scripts` workflow deliberately constrains CI to Pester 5 until the
+suite is reviewed for Pester 6. The tests retain compatibility with the bundled
+Pester 3.4.0 for basic local fallback coverage, but Pester 5 CI is authoritative.
 
 ## Documentation and structured data
 
@@ -134,6 +166,7 @@ before making infrastructure changes.
 | --- | --- | --- |
 | Codex CLI | 0.142.4 | Repository-aware implementation and troubleshooting |
 | GitHub Copilot CLI | 1.0.68 | Command-line development assistance |
+| CodeRabbit CLI | 0.6.5 | AI review of local changes and committed ranges |
 | BCS | 2.0.1 | AI-assisted Bash code review |
 | Ollama | `qwen3.5:9b` | Local inference backend used by BCS |
 | vexp CLI | 2.1.7 | Indexed repository context and impact analysis |
@@ -145,6 +178,18 @@ an installed Ollama model:
 ollama list
 bcs check path/to/script.sh
 ```
+
+CodeRabbit is available as both `coderabbit` and `cr`. It requires
+authentication and sends the selected change data to the CodeRabbit service,
+so review the scope before running it:
+
+```bash
+coderabbit doctor
+coderabbit review --plain
+```
+
+The CLI is sufficient for terminal and Codex review workflows; a VS Code
+extension is optional.
 
 ## Supporting runtimes and package managers
 
@@ -175,16 +220,28 @@ named `yq`.
 
 ## Repository validation coverage
 
-All managed repositories use the common pre-commit checks for ShellCheck,
-shfmt, markdownlint-cli2, yamllint, JSON validation, applicable GitHub issue
-schemas, applicable Compose schemas, and Gitleaks.
+All managed repositories use local pre-commit hooks for applicable files:
+ShellCheck, shfmt, markdownlint-cli2, yamllint, GitHub issue-form schemas,
+Compose schemas, JSON parsing with jq, and Gitleaks. A hook runs only when a
+repository contains a matching file type. Repository-specific coverage is:
 
-Additional checks are enabled where relevant:
+| Repository | Primary content | Additional tools and validation |
+| --- | --- | --- |
+| `bash-bcs-workspace` | Bash, Bats tests, Markdown, environment templates | BCS with Ollama; shfmt uses two-space indentation |
+| `frame-and-sample` | Markdown documentation and templates | Shared documentation, YAML, and secret checks |
+| `homelab-dns` | Bash, service configuration, Markdown | ShellCheck and shfmt for msmtp helpers |
+| `homelab-docs` | Markdown and GitHub YAML | Shared documentation, schema, and secret checks; owns this inventory |
+| `homelab-monitoring-observability` | Apache and Munin configuration documentation | Shared checks for applicable files |
+| `homelab-network` | Network documentation and repository scaffolding | Shared checks for applicable files |
+| `homelab-notification` | Bash, Podman Compose YAML, JSON examples, service configuration | Compose schema checks; manual Trivy scans of Apprise API and Mailrise images |
+| `homelab-ntp` | NTPsec documentation and configuration scaffolding | Shared checks for applicable files |
+| `homelab-scripts` | PowerShell, registry files, Task Scheduler XML, Markdown | Pester on Windows; GitHub Actions with Pester 5; shared checks for applicable WSL-side files |
+| `homelab-server-configs` | Webmin and watchdog configuration scaffolding | Shared checks for applicable files |
+| `homelab-terraform` | Terraform HCL and Markdown | Terraform, TFLint, terraform-docs, and Trivy configuration scanning |
 
-| Repository | Additional validation |
-| --- | --- |
-| `homelab-notification` | Manual Trivy scans of Apprise API and Mailrise images |
-| `homelab-terraform` | Trivy Terraform configuration scan |
+The PowerShell workflow is intentionally path-filtered to the two Windows tool
+directories and its own workflow file. Its job has read-only repository
+permissions and uses `actions/checkout@v5` on `windows-latest`.
 
 ## Maintenance
 

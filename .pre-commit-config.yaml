@@ -78,6 +78,14 @@ repos:
           (?:\.(?:c4|likec4)$|(?:^|/)likec4\.config\.(?:json|js|ts)$|(?:^|/)\.likec4rc$)
         pass_filenames: false
 
+      - id: erode-architecture-drift
+        name: Check architecture drift with Erode
+        entry: erode-drift --staged --fail-on-violations
+        language: system
+        stages: [manual]
+        pass_filenames: false
+        always_run: true
+
       - id: gitleaks
         name: Gitleaks
         entry: gitleaks protect --staged --redact --no-banner

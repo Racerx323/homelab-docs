@@ -3,7 +3,7 @@
 This document records the shared development and validation tools used across
 the homelab repositories. The primary workstation baseline is Ubuntu 24.04
 under WSL2, with PowerShell 7 installed in both Ubuntu and on the Windows host.
-Versions were last verified on July 16, 2026.
+Versions were last verified on July 20, 2026.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
@@ -187,10 +187,18 @@ before making infrastructure changes.
 | vexp CLI | 2.1.7 | Indexed repository context and impact analysis |
 | LikeC4 CLI and MCP | 1.59.0 | Architecture-as-code modeling, validation, previews, and model queries |
 | LikeC4 DSL skill | Current global installation | LikeC4 syntax and workflow guidance for Codex |
+| Erode CLI | 0.9.4 | AI-assisted comparison of code changes with the LikeC4 model |
+| Doppler CLI | 3.76.0 | Command-scoped secret injection for local development tools |
 
 LikeC4 is installed globally under the active NVM Node.js version. See
 [LikeC4 Installation and Configuration](likec4-installation-and-configuration.md)
 for the workstation, Codex, VS Code, repository, and CI setup.
+
+Erode uses Doppler project `homelab-dev` and config `dev_personal` for its AI
+provider credential. GitHub CLI remains the source of its GitHub token. See
+[Erode Installation and Configuration](erode-installation-and-configuration.md)
+and [Doppler Secrets Management](doppler-secrets-management.md) for the
+credential-scoped wrapper and security boundaries.
 
 BCS is maintained in `bash-bcs-workspace`. Its configured model name must match
 an installed Ollama model:

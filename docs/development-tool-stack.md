@@ -24,12 +24,22 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-Hooks configured with the `manual` stage, including container image scans, run
-only when explicitly requested:
+Hooks configured with the `manual` stage run only when explicitly requested.
+Invoke networked or AI-backed hooks by ID so the command does not unexpectedly
+run every manual check in the repository:
 
 ```bash
-pre-commit run --hook-stage manual --all-files
+pre-commit run trivy-config --hook-stage manual --all-files
+pre-commit run erode-architecture-drift --hook-stage manual
 ```
+
+> [!WARNING]
+> The Erode hook sends selected code changes and LikeC4 model context to the
+> configured AI provider and can consume API quota.
+
+Review the staged change scope before running Erode. Use
+`pre-commit run --hook-stage manual --all-files` only when every configured
+manual hook is intentionally in scope.
 
 ## Shell development and testing
 
@@ -55,7 +65,8 @@ bats test/
 | Tool | Version or constraint | Purpose |
 | --- | --- | --- |
 | PowerShell | 7.6.3 | Runs cross-platform PowerShell and validates Windows automation |
-| Pester | 5.5.0 through 5.99.99 in CI | Tests PowerShell, registry launchers, and task automation |
+| Pester (Windows local) | 6.0.0; 5.9.0 also installed | Tests PowerShell, registry launchers, and task automation |
+| Pester (CI) | 5.5.0 through 5.99.99 | Runs the authoritative Pester 5 regression suite |
 | GitHub Actions | `windows-latest` | Runs the Pester regression suite on pull requests and `main` |
 
 Install PowerShell in Ubuntu 24.04 from the Microsoft package repository:
@@ -95,12 +106,14 @@ Install-Module -Name Pester -Scope CurrentUser -Force -SkipPublisherCheck
 The `homelab-scripts` workflow deliberately constrains CI to Pester 5 until the
 suite is reviewed for Pester 6. The tests retain compatibility with the bundled
 Pester 3.4.0 for basic local fallback coverage, but Pester 5 CI is authoritative.
+Pester is not installed in the Ubuntu WSL PowerShell environment; run these
+Windows-specific tests from PowerShell 7 on the Windows host.
 
 ## Documentation and structured data
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| markdownlint-cli2 | 0.23.0 | Markdown style and consistency checks |
+| markdownlint-cli2 | 0.23.1 | Markdown style and consistency checks |
 | markdown-link-check | 3.14.2 | Checks links in Markdown documents |
 | yamllint | 1.33.0 | YAML syntax and style validation |
 | check-jsonschema | 0.37.4 | Schema validation for Compose and GitHub issue YAML |
@@ -180,25 +193,22 @@ before making infrastructure changes.
 | Tool | Version or model | Purpose |
 | --- | --- | --- |
 | Codex CLI | 0.142.4 | Repository-aware implementation and troubleshooting |
-| GitHub Copilot CLI | 1.0.68 | Command-line development assistance |
+| GitHub Copilot CLI | 1.0.72 | Command-line development assistance |
 | CodeRabbit CLI | 0.6.5 | AI review of local changes and committed ranges |
 | BCS | 2.0.1 | AI-assisted Bash code review |
-| Ollama | `qwen3.5:9b` | Local inference backend used by BCS |
-| vexp CLI | 2.1.7 | Indexed repository context and impact analysis |
-| LikeC4 CLI and MCP | 1.59.0 | Architecture-as-code modeling, validation, previews, and model queries |
+| Ollama | 0.24.0; `qwen3.5:9b` | Local inference backend and model used by BCS |
+| vexp CLI | 2.2.3 | Indexed repository context and impact analysis |
+| LikeC4 CLI and MCP | 1.59.1 | Architecture-as-code modeling, validation, previews, and model queries |
 | LikeC4 DSL skill | Current global installation | LikeC4 syntax and workflow guidance for Codex |
 | Erode CLI | 0.9.4 | AI-assisted comparison of code changes with the LikeC4 model |
-| Doppler CLI | 3.76.0 | Command-scoped secret injection for local development tools |
 
 LikeC4 is installed globally under the active NVM Node.js version. See
 [LikeC4 Installation and Configuration](likec4-installation-and-configuration.md)
 for the workstation, Codex, VS Code, repository, and CI setup.
 
-Erode uses Doppler project `homelab-dev` and config `dev_personal` for its AI
-provider credential. GitHub CLI remains the source of its GitHub token. See
-[Erode Installation and Configuration](erode-installation-and-configuration.md)
-and [Doppler Secrets Management](doppler-secrets-management.md) for the
-credential-scoped wrapper and security boundaries.
+Erode is installed for manual, advisory use. The current model validation has
+19 repository-linked components and 50 unlinked components, so Erode should not
+be promoted to a blocking check until the relevant mappings are complete.
 
 BCS is maintained in `bash-bcs-workspace`. Its configured model name must match
 an installed Ollama model:
@@ -220,6 +230,18 @@ coderabbit review --plain
 The CLI is sufficient for terminal and Codex review workflows; a VS Code
 extension is optional.
 
+## Secrets and credentials
+
+| Tool | Version | Purpose |
+| --- | --- | --- |
+| Doppler CLI | 3.76.0 | Command-scoped secret injection for local development tools |
+
+Erode uses Doppler project `homelab-dev` and config `dev_personal` for its AI
+provider credential. GitHub CLI remains the source of its GitHub token. See
+[Erode Installation and Configuration](erode-installation-and-configuration.md)
+and [Doppler Secrets Management](doppler-secrets-management.md) for the
+credential-scoped wrapper and security boundaries.
+
 ## Supporting runtimes and package managers
 
 | Tool | Version | Current use |
@@ -229,10 +251,10 @@ extension is optional.
 | Node.js | 26.4.0 | Markdown and AI CLI tools |
 | npm | 12.0.1 | User-level global Node package installation |
 | Go | 1.26.4 | User-level installation of Go CLIs such as `yq` |
-| NVM | Current user installation | Selects the active Node.js toolchain |
+| NVM | 0.40.5 | Selects the active Node.js toolchain |
 
-User-level executables are installed in `~/.local/bin`, which must occur once
-in `PATH`. Node-based tools are installed under the active NVM version.
+User-level executables are installed in `~/.local/bin`, which must appear on
+`PATH`. Node-based tools are installed under the active NVM version.
 
 Examples of the current installation channels are:
 
@@ -242,10 +264,20 @@ npm install --global markdownlint-cli2 markdown-link-check vexp-cli
 GOBIN="$HOME/.local/bin" go install github.com/mikefarah/yq/v4@latest
 ```
 
-Terraform, TFLint, terraform-docs, Trivy, Gitleaks, Skopeo, Ollama, and Codex
-should be installed from their official release channels. Avoid similarly named
-packages from unrelated projects, especially the Python/jq-wrapper package
-named `yq`.
+The current installation channels are:
+
+| Channel | Tools |
+| --- | --- |
+| Ubuntu APT packages | Git, GitHub CLI, pre-commit, ShellCheck, shfmt, Bats, yamllint, jq, Gitleaks, Podman, Skopeo |
+| Vendor APT repositories | PowerShell, Terraform, Trivy, Doppler |
+| Global npm under NVM | Copilot, LikeC4, Erode, vexp, markdownlint-cli2, markdown-link-check |
+| pipx | check-jsonschema |
+| Go build in `~/.local/bin` | Mike Farah yq v4 |
+| User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs |
+| Snap | Ollama 0.24.0, published as `mz2` |
+
+Avoid similarly named packages from unrelated projects, especially the
+Python/jq-wrapper package named `yq`.
 
 ## Repository validation coverage
 
@@ -259,7 +291,7 @@ repository contains a matching file type. Repository-specific coverage is:
 | `bash-bcs-workspace` | Bash, Bats tests, Markdown, environment templates | BCS with Ollama; shfmt uses two-space indentation |
 | `frame-and-sample` | Markdown documentation and templates | Shared documentation, YAML, and secret checks |
 | `homelab-dns` | Bash, service configuration, Markdown | ShellCheck and shfmt for msmtp helpers |
-| `homelab-docs` | Markdown and GitHub YAML | Shared documentation, schema, and secret checks; owns this inventory |
+| `homelab-docs` | Markdown, GitHub YAML, and LikeC4 | Shared checks; LikeC4 formatting and validation; manual Erode drift analysis; owns this inventory |
 | `homelab-monitoring-observability` | Apache and Munin configuration documentation | Shared checks for applicable files |
 | `homelab-network` | Network documentation and repository scaffolding | Shared checks for applicable files |
 | `homelab-notification` | Bash, Podman Compose YAML, JSON examples, service configuration | Compose schema checks; manual Trivy scans of Apprise API and Mailrise images |

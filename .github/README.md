@@ -95,6 +95,11 @@ infrastructure documented in the network repository.
 
 A network diagram can be found here: [Network Diagram](https://github.com/Racerx323/homelab-network?tab=readme-ov-file#topology)
 
+The canonical cross-repository architecture model is maintained in
+[LikeC4](../architecture/likec4/README.md). It describes the homelab platforms,
+repository portfolio, deployment topology, and major relationships as
+version-controlled architecture data.
+
 ## 🗃️ Repository Ecosystem
 
 | Repository | Scope | Current status |
@@ -121,22 +126,77 @@ homelab-docs/
 │   ├── CONTRIBUTING.md          # Contribution guidance
 │   ├── SECURITY.md              # Vulnerability reporting policy
 │   └── ISSUE_TEMPLATE/          # Structured support and change requests
+├── architecture/
+│   └── likec4/
+│       ├── deployment/           # Deployment model fragments
+│       ├── model/                # Logical architecture model fragments
+│       ├── views/                # Architecture view definitions
+│       ├── likec4.config.json    # LikeC4 workspace configuration
+│       └── specification.c4      # Shared model specification
 ├── docs/
-│   └── development-tool-stack.md # Cross-repository tooling inventory
+│   ├── development-tool-stack.md # Authoritative tooling inventory
+│   ├── doppler-secrets-management.md
+│   ├── erode-installation-and-configuration.md
+│   └── likec4-installation-and-configuration.md
+├── .pre-commit-config.yaml       # Local validation and manual checks
 ├── AGENTS.md                     # Automation and review instructions
 └── LICENSE.md                    # GNU GPL v3 license
 ```
 
 ## 🛠️ Development Tooling
 
-The repositories share pre-commit validation for applicable Bash, Markdown,
-YAML, JSON, Compose, and secret checks. Terraform adds infrastructure-specific
-validation, while `homelab-scripts` uses PowerShell 7, Pester, and a Windows
-GitHub Actions runner. Local container validation and deployment use Podman.
+The primary workstation is Ubuntu 24.04 under WSL2, with PowerShell 7 available
+in both Ubuntu and Windows. NVM supplies the Node.js toolchain used by the
+documentation, architecture, and AI-assisted CLIs. User-level standalone
+executables are available through `~/.local/bin`.
 
-The complete local development, validation, security, container, Terraform,
-PowerShell, and AI-assisted tool inventory is maintained in the
-[Development Tool Stack](../docs/development-tool-stack.md).
+The shared development workflow includes:
+
+- **Source and validation:** Git, GitHub CLI, and pre-commit.
+- **Shell and documentation:** ShellCheck, shfmt, Bats, markdownlint-cli2,
+  yamllint, check-jsonschema, jq, and Mike Farah yq.
+- **Security and containers:** Gitleaks, Trivy, Podman, and Skopeo.
+- **Infrastructure:** Terraform, TFLint, and terraform-docs.
+- **Architecture:** LikeC4 formatting and validation, with manual advisory
+  Erode drift analysis.
+- **AI-assisted development:** Codex, Copilot, CodeRabbit, BCS with Ollama, and
+  vexp.
+- **Secrets:** Doppler provides command-scoped provider credentials;
+  GitHub CLI remains the GitHub credential source.
+- **Windows testing:** PowerShell 7 and Pester, with Pester 5 authoritative in
+  GitHub Actions.
+
+Install the repository hook and run the deterministic validation suite from
+the repository root:
+
+```bash
+pre-commit install
+pre-commit run --all-files
+likec4 validate --json --no-layout architecture/likec4
+```
+
+Run Erode explicitly when architecture-relevant staged changes need advisory
+analysis:
+
+```bash
+pre-commit run erode-architecture-drift --hook-stage manual
+```
+
+> [!WARNING]
+> The Erode hook sends selected code changes and LikeC4 model context to the
+> configured AI provider and can consume API quota.
+
+Erode remains advisory until the relevant LikeC4 components have complete
+repository mappings. Do not invoke every manual-stage hook as a group unless
+all networked and AI-backed checks are intentionally in scope.
+
+The [Development Tool Stack](../docs/development-tool-stack.md) is the source
+of truth for installed versions, package channels, and cross-repository
+validation coverage. Detailed setup is documented in:
+
+- [LikeC4 Installation and Configuration](../docs/likec4-installation-and-configuration.md)
+- [Erode Installation and Configuration](../docs/erode-installation-and-configuration.md)
+- [Doppler Secrets Management](../docs/doppler-secrets-management.md)
 
 ## 🗺️ Future Goals & Roadmap
 

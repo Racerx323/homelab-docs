@@ -1,0 +1,15 @@
+views "Portfolio" {
+  view index {
+    title "Repository Landscape"
+    description "All indexed source repositories, including the optional media knowledge base."
+    include operator, portfolio, portfolio.*
+    autoLayout LeftRight
+  }
+
+  view other-projects {
+    title "Optional and Adjacent Projects"
+    description "Projects maintained in the workspace that are independent of, or adjacent to, the core homelab runtime."
+    include operator, portfolio.nebulaWorkspace, portfolio.mediaRepo, mediaKnowledgeBase, mediaKnowledgeBase.*
+    autoLayout LeftRight
+  }
+}

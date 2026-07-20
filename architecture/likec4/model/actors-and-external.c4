@@ -1,0 +1,37 @@
+model {
+  operator = person "Homelab Operator" {
+    description "Builds, administers, and observes the homelab and its source repositories."
+  }
+
+  clientDevices = system "Client Devices" {
+    description "Trusted, management, and IoT devices consuming network, DNS, and time services."
+  }
+
+  homelab = system "Homelab" {
+    #homelab
+    description "The deployed network, core services, operational tooling, and supporting automation."
+  }
+
+  internet = externalSystem "Internet" {
+    #external
+  }
+  authoritativeDns = externalSystem "Root and Authoritative DNS" {
+    #external
+  }
+  notificationProviders = externalSystem "Notification Providers" {
+    #external
+    description "Discord, Telegram, Slack, email/SMTP, PagerDuty, Pushover, and generic webhooks."
+  }
+  upstreamTime = externalSystem "Upstream Time Sources" {
+    #external
+  }
+  github = externalSystem "GitHub" {
+    #external
+  }
+
+  operator -[uses]-> homelab "operates"
+  operator -[uses]-> github "maintains repositories"
+  clientDevices -[connects]-> homelab "consume homelab services"
+  internet -[connects]-> homelab "WAN connectivity"
+  notificationProviders -[notifies]-> operator "deliver operational messages"
+}

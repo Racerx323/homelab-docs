@@ -1,0 +1,77 @@
+model {
+  portfolio = system "Repository Portfolio" {
+    description "Source-of-truth repositories and knowledge bases maintained together in the workspace."
+
+    docsRepo = repository "homelab-docs" {
+      #repository #homelab
+      description "Central documentation and the canonical LikeC4 architecture project."
+      link https://github.com/Racerx323/homelab-docs "GitHub"
+    }
+    networkRepo = repository "homelab-network" {
+      #repository #homelab
+      description "Physical network topology, UniFi hardware, services, VLANs, and subnets."
+      link https://github.com/Racerx323/homelab-network "GitHub"
+    }
+    dnsRepo = repository "homelab-dns" {
+      #repository #homelab
+      description "Highly available Pi-hole, Unbound, and Keepalived DNS configuration."
+      link https://github.com/Racerx323/homelab-dns "GitHub"
+    }
+    notificationRepo = repository "homelab-notification" {
+      #repository #homelab
+      description "Hardened Podman deployment of Apprise API and optional Mailrise."
+      link https://github.com/Racerx323/homelab-notification "GitHub"
+    }
+    observabilityRepo = repository "homelab-monitoring-observability" {
+      #repository #homelab
+      description "Prometheus, Grafana, Alertmanager, exporters, and optional Munin configuration."
+      link https://github.com/Racerx323/homelab-monitoring-observability "GitHub"
+    }
+    ntpRepo = repository "homelab-ntp" {
+      #repository #homelab
+      description "NTP server and client configuration; detailed topology remains to be documented."
+      link https://github.com/Racerx323/homelab-ntp "GitHub"
+    }
+    scriptsRepo = repository "homelab-scripts" {
+      #repository #homelab
+      description "Windows and WSL administration, repair, DNS cache, and repository synchronization utilities."
+      link https://github.com/Racerx323/homelab-scripts "GitHub"
+    }
+    serverConfigsRepo = repository "homelab-server-configs" {
+      #repository #homelab
+      description "Server configuration, Docker Compose workloads, and infrastructure automation."
+      link https://github.com/Racerx323/homelab-server-configs "GitHub"
+    }
+    terraformRepo = repository "homelab-terraform" {
+      #repository #homelab
+      description "Terraform configurations for VMs, networks, and related infrastructure."
+      link https://github.com/Racerx323/homelab-terraform "GitHub"
+    }
+    nebulaWorkspace = repository "bash-bcs-workspace / nebula-sync" {
+      #repository #homelab
+      description "Debian build, installer, systemd service, and timers for Nebula-Sync."
+    }
+    mediaRepo = repository "frame-and-sample" {
+      #repository #optional
+      description "Independent knowledge base for live video production, capture, audio, NDI, OBS, and Wirecast."
+      link https://github.com/Racerx323/frame-and-sample "GitHub"
+    }
+  }
+
+  operator -[manages]-> portfolio "maintains"
+  portfolio.docsRepo -[documents]-> portfolio.networkRepo
+  portfolio.docsRepo -[documents]-> portfolio.dnsRepo
+  portfolio.docsRepo -[documents]-> portfolio.notificationRepo
+  portfolio.docsRepo -[documents]-> portfolio.observabilityRepo
+  portfolio.docsRepo -[documents]-> portfolio.ntpRepo
+  portfolio.docsRepo -[documents]-> portfolio.scriptsRepo
+  portfolio.docsRepo -[documents]-> portfolio.serverConfigsRepo
+  portfolio.docsRepo -[documents]-> portfolio.terraformRepo
+  portfolio.terraformRepo -[provisions]-> portfolio.serverConfigsRepo "provides infrastructure for"
+  portfolio.serverConfigsRepo -[configures]-> portfolio.observabilityRepo "hosts and configures workloads"
+  portfolio.scriptsRepo -[uses]-> portfolio.notificationRepo "sends WSL sync notifications"
+  portfolio.nebulaWorkspace -[synchronizes]-> portfolio.dnsRepo "synchronizes Pi-hole peers"
+  portfolio.networkRepo -[hosts]-> portfolio.dnsRepo "provides network connectivity"
+  portfolio.networkRepo -[hosts]-> portfolio.observabilityRepo "provides network connectivity"
+  portfolio.networkRepo -[hosts]-> portfolio.notificationRepo "provides network connectivity"
+}

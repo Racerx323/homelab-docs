@@ -1,0 +1,35 @@
+model {
+  extend homelab {
+    observability = system "Monitoring and Observability" {
+      #runtime
+      description "Containerized metrics, visualization, alert routing, and optional long-term Munin graphs."
+      metadata { repository "homelab-monitoring-observability" }
+      link https://github.com/Racerx323/homelab-monitoring-observability "Source repository"
+
+      prometheus = service "Prometheus"
+      grafana = application "Grafana"
+      alertmanager = service "Alertmanager"
+      nodeExporter = service "Node Exporter"
+      cadvisor = service "cAdvisor"
+      serviceExporters = service "Service Exporters" {
+        description "Extensible scrape targets, including services such as Pi-hole exporters."
+      }
+      munin = application "Munin (Optional)" {
+        #optional
+      }
+      muninNodes = service "Munin Nodes" {
+        #optional
+      }
+    }
+  }
+
+  operator -[uses]-> homelab.observability.grafana "views dashboards"
+  operator -[uses]-> homelab.observability.munin "views long-term graphs"
+  homelab.observability.grafana -[queries]-> homelab.observability.prometheus "PromQL"
+  homelab.observability.prometheus -[monitors]-> homelab.observability.nodeExporter "scrapes host metrics"
+  homelab.observability.prometheus -[monitors]-> homelab.observability.cadvisor "scrapes container metrics"
+  homelab.observability.prometheus -[monitors]-> homelab.observability.serviceExporters "scrapes service metrics"
+  homelab.observability.prometheus -[alerts]-> homelab.observability.alertmanager "fires alerts"
+  homelab.observability.alertmanager -[notifies]-> notificationProviders "documented direct receivers"
+  homelab.observability.munin -[monitors]-> homelab.observability.muninNodes "polls"
+}

@@ -1,0 +1,26 @@
+model {
+  extend homelab {
+    notificationPlatform = system "Notification Platform" {
+      #runtime
+      description "Hardened Podman deployment of Apprise API with an optional SMTP-to-Apprise relay."
+      metadata { repository "homelab-notification" }
+      link https://github.com/Racerx323/homelab-notification "Source repository"
+
+      appriseApi = service "Apprise API" {
+        technology "HTTP API / Podman"
+        description "Accepts stateless notifications or requests addressed to persistent configuration keys."
+      }
+      mailrise = service "Mailrise" {
+        technology "SMTP / Podman"
+        description "Optional SMTP relay that forwards messages to Apprise API over the private Podman network."
+      }
+      configStore = datastore "Apprise Persistent Data" {
+        description "Configuration, plugins, and attachment storage."
+      }
+    }
+  }
+
+  homelab.notificationPlatform.mailrise -[routes]-> homelab.notificationPlatform.appriseApi "apprise://apprise-api:8000/key"
+  homelab.notificationPlatform.appriseApi -[uses]-> homelab.notificationPlatform.configStore "reads configurations"
+  homelab.notificationPlatform.appriseApi -[notifies]-> notificationProviders "provider URLs and webhooks"
+}

@@ -1,0 +1,67 @@
+deployment {
+  production = environment "Home Lab" {
+    #homelab
+
+    networkZone = zone "Network Infrastructure" {
+      gatewayAppliance = appliance "UDM-SE" {
+        udm = instanceOf homelab.networkPlatform.gateway
+      }
+      coreSwitching = appliance "Core and Access Switching" {
+        aggregation = instanceOf homelab.networkPlatform.aggregation
+        pro48 = instanceOf homelab.networkPlatform.pro48
+        proXg24 = instanceOf homelab.networkPlatform.proXg24
+        xg6 = instanceOf homelab.networkPlatform.xg6
+        edge = instanceOf homelab.networkPlatform.accessSwitches
+      }
+      wireless = appliance "Wireless and LoRaWAN" {
+        accessPoints = instanceOf homelab.networkPlatform.accessPoints
+        lorawan = instanceOf homelab.networkPlatform.lorawanGateway
+      }
+    }
+
+    dnsZone = zone "DNS High Availability" {
+      dnsNode1 = server "DNS Node 1" {
+        keepalived1 = instanceOf homelab.dnsPlatform.node1.keepalived
+        pihole1 = instanceOf homelab.dnsPlatform.node1.pihole
+        unbound1 = instanceOf homelab.dnsPlatform.node1.unbound
+      }
+      dnsNode2 = server "DNS Node 2" {
+        keepalived2 = instanceOf homelab.dnsPlatform.node2.keepalived
+        pihole2 = instanceOf homelab.dnsPlatform.node2.pihole
+        unbound2 = instanceOf homelab.dnsPlatform.node2.unbound
+      }
+      dnsVip = appliance "DNS Virtual Address" {
+        virtualIp = instanceOf homelab.dnsPlatform.virtualIp
+      }
+    }
+
+    servicesZone = zone "Application Services" {
+      monitoringHost = server "Monitoring Host" {
+        prometheus = instanceOf homelab.observability.prometheus
+        grafana = instanceOf homelab.observability.grafana
+        alertmanager = instanceOf homelab.observability.alertmanager
+        cadvisor = instanceOf homelab.observability.cadvisor
+        nodeExporter = instanceOf homelab.observability.nodeExporter
+        munin = instanceOf homelab.observability.munin
+      }
+      notificationHost = server "Notification Host" {
+        appriseApi = instanceOf homelab.notificationPlatform.appriseApi
+        mailrise = instanceOf homelab.notificationPlatform.mailrise
+        configStore = instanceOf homelab.notificationPlatform.configStore
+      }
+      automationHost = server "Automation Host" {
+        nebulaTimer = instanceOf homelab.automation.nebulaTimer
+        nebulaSync = instanceOf homelab.automation.nebulaSync
+        ntpServer = instanceOf homelab.timePlatform.ntpServer
+      }
+    }
+
+    managementZone = zone "Management Workstation" {
+      operatorWorkstation = workstation "Operator Workstation" {
+        terraform = instanceOf homelab.automation.terraform
+        serverConfiguration = instanceOf homelab.automation.serverConfiguration
+        windowsWslScripts = instanceOf homelab.automation.windowsWslScripts
+      }
+    }
+  }
+}

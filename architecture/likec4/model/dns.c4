@@ -1,0 +1,36 @@
+model {
+  extend homelab {
+    dnsPlatform = system "Highly Available DNS" {
+      #runtime
+      description "A virtual DNS endpoint backed by two Pi-hole, Unbound, and Keepalived nodes."
+      metadata { repository "homelab-dns" }
+      link https://github.com/Racerx323/homelab-dns "Source repository"
+
+      virtualIp = service "DNS Virtual IP" {
+        description "Floating client-facing DNS address managed by Keepalived."
+      }
+      node1 = system "DNS Node 1 (Primary)" {
+        keepalived = service "Keepalived 1"
+        pihole = service "Pi-hole 1"
+        unbound = service "Unbound 1"
+      }
+      node2 = system "DNS Node 2 (Backup)" {
+        keepalived = service "Keepalived 2"
+        pihole = service "Pi-hole 2"
+        unbound = service "Unbound 2"
+      }
+    }
+  }
+
+  homelab.networkPlatform.gateway -[routes]-> homelab.dnsPlatform.virtualIp "DHCP advertises DNS VIP"
+  clientDevices -[queries]-> homelab.dnsPlatform.virtualIp "DNS/53"
+  homelab.dnsPlatform.virtualIp -[routes]-> homelab.dnsPlatform.node1.pihole "active primary"
+  homelab.dnsPlatform.virtualIp -[routes]-> homelab.dnsPlatform.node2.pihole "failover backup"
+  homelab.dnsPlatform.node1.keepalived -[synchronizes]-> homelab.dnsPlatform.node2.keepalived "VRRP heartbeat"
+  homelab.dnsPlatform.node1.keepalived -[manages]-> homelab.dnsPlatform.virtualIp "owns while primary"
+  homelab.dnsPlatform.node2.keepalived -[manages]-> homelab.dnsPlatform.virtualIp "claims on failover"
+  homelab.dnsPlatform.node1.pihole -[resolves]-> homelab.dnsPlatform.node1.unbound "127.0.0.1:5335"
+  homelab.dnsPlatform.node2.pihole -[resolves]-> homelab.dnsPlatform.node2.unbound "127.0.0.1:5335"
+  homelab.dnsPlatform.node1.unbound -[resolves]-> authoritativeDns "recursive DNS"
+  homelab.dnsPlatform.node2.unbound -[resolves]-> authoritativeDns "recursive DNS"
+}

@@ -1,0 +1,81 @@
+specification {
+  tag homelab
+  tag external
+  tag repository
+  tag optional
+  tag infrastructure
+  tag operations
+  tag runtime
+
+  element person {
+    notation "Person"
+    style { shape person }
+  }
+  element system {
+    notation "Software System"
+  }
+  element repository {
+    notation "Source Repository"
+    style { shape rectangle }
+  }
+  element service {
+    notation "Service"
+    style { shape component }
+  }
+  element application {
+    notation "Application"
+    style { shape browser }
+  }
+  element datastore {
+    notation "Data Store"
+    style { shape storage }
+  }
+  element device {
+    notation "Network Device"
+  }
+  element network {
+    notation "Network Segment"
+  }
+  element automation {
+    notation "Automation"
+    style { shape component }
+  }
+  element documentation {
+    notation "Documentation"
+    style { shape document }
+  }
+  element externalSystem {
+    notation "External System"
+  }
+
+  relationship uses
+  relationship connects
+  relationship routes
+  relationship resolves
+  relationship queries
+  relationship monitors
+  relationship alerts
+  relationship notifies
+  relationship synchronizes
+  relationship provisions
+  relationship configures
+  relationship documents
+  relationship hosts
+  relationship manages
+
+  deploymentNode environment {
+    notation "Environment"
+  }
+  deploymentNode zone {
+    notation "Network Zone"
+  }
+  deploymentNode server {
+    notation "Server"
+  }
+  deploymentNode appliance {
+    notation "Appliance"
+  }
+  deploymentNode workstation {
+    notation "Workstation"
+  }
+}

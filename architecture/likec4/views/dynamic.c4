@@ -1,0 +1,55 @@
+views "Operational Flows" {
+  dynamic view dns-query {
+    title "DNS Query"
+    variant sequence
+
+    clientDevices -> homelab.dnsPlatform.virtualIp "query DNS/53"
+    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "route to active node"
+    homelab.dnsPlatform.node1.pihole -> homelab.dnsPlatform.node1.unbound "resolve via 127.0.0.1:5335"
+    homelab.dnsPlatform.node1.unbound -> authoritativeDns "recursive lookup"
+    homelab.dnsPlatform.node1.unbound <- authoritativeDns "DNS answer"
+    homelab.dnsPlatform.node1.pihole <- homelab.dnsPlatform.node1.unbound "filtered answer"
+    homelab.dnsPlatform.virtualIp <- homelab.dnsPlatform.node1.pihole "response"
+    clientDevices <- homelab.dnsPlatform.virtualIp "DNS answer"
+  }
+
+  dynamic view dns-failover {
+    title "DNS VRRP Failover"
+    variant sequence
+
+    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.node2.keepalived "VRRP advertisements"
+    alt "DNS node health" {
+      when "primary is healthy" {
+        homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.virtualIp "retains VIP"
+        clientDevices -> homelab.dnsPlatform.virtualIp "DNS query"
+        homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "serve on primary"
+      }
+      else "primary fails" {
+        homelab.dnsPlatform.node2.keepalived -> homelab.dnsPlatform.virtualIp "claims VIP"
+        clientDevices -> homelab.dnsPlatform.virtualIp "DNS query"
+        homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node2.pihole "serve on backup"
+      }
+    }
+  }
+
+  dynamic view alert-delivery {
+    title "Monitoring Alert Delivery"
+    variant sequence
+
+    homelab.observability.nodeExporter -> homelab.observability.prometheus "expose host metrics"
+    homelab.observability.prometheus -> homelab.observability.alertmanager "fire alert"
+    homelab.observability.alertmanager -> notificationProviders "route to configured receiver"
+    operator <- notificationProviders "deliver operational alert"
+  }
+
+  dynamic view pi-hole-sync {
+    title "Pi-hole Configuration Synchronization"
+    variant sequence
+
+    homelab.automation.nebulaTimer -> homelab.automation.nebulaSync "trigger scheduled sync"
+    homelab.automation.nebulaSync -> homelab.dnsPlatform.node1.pihole "read source configuration"
+    homelab.automation.nebulaSync <- homelab.dnsPlatform.node1.pihole "configuration snapshot"
+    homelab.automation.nebulaSync -> homelab.dnsPlatform.node2.pihole "apply peer configuration"
+    homelab.automation.nebulaSync <- homelab.dnsPlatform.node2.pihole "sync result"
+  }
+}

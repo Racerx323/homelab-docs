@@ -1,0 +1,39 @@
+model {
+  extend homelab {
+    automation = system "Provisioning and Operations" {
+      #operations
+      description "Infrastructure provisioning, host configuration, workstation utilities, and Pi-hole synchronization."
+
+      terraform = automation "Terraform Provisioner" {
+        metadata { repository "homelab-terraform"; evidence "VMs and networks are documented; provider details remain unspecified" }
+        link https://github.com/Racerx323/homelab-terraform "Source repository"
+      }
+      serverConfiguration = automation "Server Configuration Automation" {
+        metadata { repository "homelab-server-configs"; evidence "Terraform, Docker Compose, Bash, and PowerShell" }
+        link https://github.com/Racerx323/homelab-server-configs "Source repository"
+      }
+      windowsWslScripts = automation "Windows and WSL Utilities" {
+        metadata { repository "homelab-scripts" }
+        link https://github.com/Racerx323/homelab-scripts "Source repository"
+      }
+      nebulaTimer = automation "Nebula-Sync Timer" {
+        description "systemd timer that triggers Pi-hole synchronization."
+      }
+      nebulaSync = service "Nebula-Sync" {
+        description "Synchronizes Pi-hole configuration across peers."
+        metadata { repository "bash-bcs-workspace/projects/nebula-sync" }
+      }
+    }
+  }
+
+  operator -[uses]-> homelab.automation.terraform "applies infrastructure changes"
+  operator -[uses]-> homelab.automation.serverConfiguration "configures hosts and workloads"
+  homelab.automation.terraform -[provisions]-> homelab.networkPlatform "provisions network resources where supported"
+  homelab.automation.terraform -[provisions]-> homelab.dnsPlatform "provisions VM capacity where supported"
+  homelab.automation.serverConfiguration -[configures]-> homelab.observability "deploys container configuration"
+  homelab.automation.serverConfiguration -[configures]-> homelab.notificationPlatform "deploys service configuration"
+  homelab.automation.windowsWslScripts -[notifies]-> homelab.notificationPlatform.appriseApi "WSL repository sync status"
+  homelab.automation.nebulaTimer -[manages]-> homelab.automation.nebulaSync "triggers scheduled sync"
+  homelab.automation.nebulaSync -[queries]-> homelab.dnsPlatform.node1.pihole "reads source configuration"
+  homelab.automation.nebulaSync -[synchronizes]-> homelab.dnsPlatform.node2.pihole "applies peer configuration"
+}

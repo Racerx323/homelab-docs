@@ -1,0 +1,47 @@
+model {
+  extend homelab {
+    networkPlatform = system "Network Platform" {
+      #infrastructure
+      description "UniFi gateway, switching, wireless access, VLAN segmentation, and LoRaWAN connectivity."
+      metadata { repository "homelab-network" }
+      link https://github.com/Racerx323/homelab-network "Source repository"
+
+      gateway = device "UDM-SE" {
+        description "Internet gateway, firewall, DHCP server, and UniFi controller."
+      }
+      aggregation = device "Aggregation Switch"
+      pro48 = device "Pro 48 PoE"
+      proXg24 = device "Pro XG 24"
+      xg6 = device "XG 6 PoE"
+      accessSwitches = device "Edge Access Switches" {
+        description "Lite 8 PoE, Flex 10 GbE, and Flex Mini switches."
+      }
+      accessPoints = device "Wi-Fi Access Points" {
+        description "AC Mesh and AC HD wireless access points."
+      }
+      lorawanGateway = device "LoRaWAN Gateway" {
+        description "Kerlink iStation packet forwarder."
+      }
+      thingsStack = service "The Things Stack" {
+        description "Community Edition LoRaWAN network server."
+      }
+      managementVlan = network "Management VLAN"
+      mainVlan = network "Main VLAN"
+      iotVlan = network "IoT VLAN"
+    }
+  }
+
+  internet -[connects]-> homelab.networkPlatform.gateway "2.5 GbE WAN"
+  homelab.networkPlatform.gateway -[connects]-> homelab.networkPlatform.aggregation "10 GbE"
+  homelab.networkPlatform.aggregation -[connects]-> homelab.networkPlatform.pro48 "20 GbE"
+  homelab.networkPlatform.aggregation -[connects]-> homelab.networkPlatform.proXg24 "20 GbE"
+  homelab.networkPlatform.aggregation -[connects]-> homelab.networkPlatform.xg6 "20 GbE"
+  homelab.networkPlatform.pro48 -[connects]-> homelab.networkPlatform.accessSwitches "1 GbE access"
+  homelab.networkPlatform.pro48 -[connects]-> homelab.networkPlatform.accessPoints "1 GbE PoE"
+  homelab.networkPlatform.pro48 -[connects]-> homelab.networkPlatform.lorawanGateway "1 GbE"
+  homelab.networkPlatform.lorawanGateway -[routes]-> homelab.networkPlatform.thingsStack "LoRaWAN packets"
+  homelab.networkPlatform.gateway -[routes]-> homelab.networkPlatform.managementVlan
+  homelab.networkPlatform.gateway -[routes]-> homelab.networkPlatform.mainVlan
+  homelab.networkPlatform.gateway -[routes]-> homelab.networkPlatform.iotVlan
+  clientDevices -[connects]-> homelab.networkPlatform.accessPoints "Wi-Fi"
+}

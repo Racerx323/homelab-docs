@@ -63,6 +63,21 @@ repos:
         language: system
         types: [json]
 
+      - id: likec4-format
+        name: Check LikeC4 formatting
+        entry: likec4 format --check
+        language: system
+        files: \.(?:c4|likec4)$
+        pass_filenames: false
+
+      - id: likec4-validate
+        name: Validate LikeC4 workspace
+        entry: likec4 validate
+        language: system
+        files: >-
+          (?:\.(?:c4|likec4)$|(?:^|/)likec4\.config\.(?:json|js|ts)$|(?:^|/)\.likec4rc$)
+        pass_filenames: false
+
       - id: gitleaks
         name: Gitleaks
         entry: gitleaks protect --staged --redact --no-banner

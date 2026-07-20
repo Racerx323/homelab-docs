@@ -1,0 +1,13 @@
+{
+  "$schema": "https://likec4.dev/schemas/config.json",
+  "name": "aaron-homelab",
+  "title": "Aaron's Homelab Architecture",
+  "implicitViews": true,
+  "landingPage": {
+    "redirect": true
+  },
+  "metadata": {
+    "owner": "Racerx323",
+    "scope": "homelab repository portfolio and runtime architecture"
+  }
+}

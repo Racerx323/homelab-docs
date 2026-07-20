@@ -1,0 +1,36 @@
+model {
+  extend homelab {
+    timePlatform = system "Network Time" {
+      #runtime
+      description "NTP server and client configuration. The repository does not yet document concrete host topology."
+      metadata { repository "homelab-ntp"; status "logical placeholder pending topology documentation" }
+      link https://github.com/Racerx323/homelab-ntp "Source repository"
+
+      ntpServer = service "NTP Server"
+      ntpClients = service "NTP Clients"
+    }
+  }
+
+  mediaKnowledgeBase = system "Frame and Sample" {
+    #optional
+    description "Independent knowledge base for repeatable live production, capture, audio, and synchronization workflows."
+    metadata { repository "frame-and-sample" }
+    link https://github.com/Racerx323/frame-and-sample "Source repository"
+
+    ecosystems = documentation "Production Ecosystems" {
+      description "OBS Studio, NDI, and Wirecast guidance."
+    }
+    hardware = documentation "Reusable Hardware Guidance" {
+      description "Audio interfaces, capture cards, and cameras."
+    }
+    operationsGuides = documentation "Cross-cutting Workflow Guides" {
+      description "Network preparation, AV synchronization, and troubleshooting."
+    }
+  }
+
+  homelab.timePlatform.ntpClients -[queries]-> homelab.timePlatform.ntpServer "NTP"
+  homelab.timePlatform.ntpServer -[queries]-> upstreamTime "synchronizes clock"
+  operator -[uses]-> mediaKnowledgeBase "consults production guidance"
+  mediaKnowledgeBase.ecosystems -[documents]-> mediaKnowledgeBase.hardware "references reusable setup"
+  mediaKnowledgeBase.ecosystems -[documents]-> mediaKnowledgeBase.operationsGuides "follows operational practices"
+}

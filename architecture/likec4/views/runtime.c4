@@ -1,0 +1,51 @@
+views "Runtime Architecture" {
+  view homelab-context {
+    title "Homelab System Context"
+    include operator, clientDevices, homelab, homelab.*, internet, authoritativeDns, notificationProviders, upstreamTime
+    autoLayout LeftRight
+  }
+
+  view network-topology of homelab.networkPlatform {
+    title "Network Topology and Segmentation"
+    include *
+    include internet, clientDevices
+    include -> homelab.networkPlatform.gateway
+    autoLayout LeftRight
+  }
+
+  view dns-ha of homelab.dnsPlatform {
+    title "Highly Available DNS"
+    include *
+    include homelab.dnsPlatform.**
+    include clientDevices, authoritativeDns, homelab.networkPlatform.gateway, homelab.automation.nebulaSync
+    autoLayout LeftRight
+  }
+
+  view notification-platform of homelab.notificationPlatform {
+    title "Notification Platform"
+    include *
+    include notificationProviders, operator, homelab.automation.windowsWslScripts
+    autoLayout LeftRight
+  }
+
+  view observability of homelab.observability {
+    title "Monitoring and Observability"
+    include *
+    include operator, notificationProviders
+    autoLayout LeftRight
+  }
+
+  view provisioning-and-operations of homelab.automation {
+    title "Provisioning and Operations"
+    include *
+    include operator, homelab.networkPlatform, homelab.dnsPlatform, homelab.observability, homelab.notificationPlatform
+    autoLayout LeftRight
+  }
+
+  deployment view deployment-homelab {
+    title "Homelab Deployment"
+    include production.**
+    style production.* { color muted }
+    autoLayout LeftRight
+  }
+}

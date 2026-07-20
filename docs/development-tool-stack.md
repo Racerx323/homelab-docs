@@ -185,6 +185,12 @@ before making infrastructure changes.
 | BCS | 2.0.1 | AI-assisted Bash code review |
 | Ollama | `qwen3.5:9b` | Local inference backend used by BCS |
 | vexp CLI | 2.1.7 | Indexed repository context and impact analysis |
+| LikeC4 CLI and MCP | 1.59.0 | Architecture-as-code modeling, validation, previews, and model queries |
+| LikeC4 DSL skill | Current global installation | LikeC4 syntax and workflow guidance for Codex |
+
+LikeC4 is installed globally under the active NVM Node.js version. See
+[LikeC4 Installation and Configuration](likec4-installation-and-configuration.md)
+for the workstation, Codex, VS Code, repository, and CI setup.
 
 BCS is maintained in `bash-bcs-workspace`. Its configured model name must match
 an installed Ollama model:

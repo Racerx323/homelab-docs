@@ -100,7 +100,7 @@ to the audit token.
 | GitHub resource owner | `Racerx323` |
 | GitHub repository access | Only `bash-bcs-workspace` |
 | GitHub repository permissions | Contents: read; Metadata: read |
-| Doppler source of truth | Project `homelab-dev`, environment `github`, config `ci` |
+| Doppler source of truth | Project `homelab-dev`, environment `github`, config `ci_governance` |
 | Doppler secret name | `REPOSITORY_AUDIT_TOKEN` |
 | GitHub sync target | Repository `Racerx323/homelab-docs`, Actions secrets |
 | Workflow consumer | `.github/workflows/repository-governance.yml` |
@@ -112,8 +112,8 @@ reuse the broader GitHub CLI OAuth token.
 
 ### Doppler-to-GitHub sync
 
-The Doppler GitHub integration synchronizes config `ci` in the `github`
-environment of project `homelab-dev` to the Actions secrets for
+The Doppler GitHub integration synchronizes config `ci_governance` in the
+`github` environment of project `homelab-dev` to the Actions secrets for
 `homelab-docs`. Doppler is the source of truth; GitHub stores the execution copy
 consumed by the workflow. Update and rotate the value in Doppler, not directly
 in GitHub, so later synchronization cannot overwrite an out-of-band change.
@@ -127,15 +127,36 @@ these synchronized secret names:
 - `DOPPLER_CONFIG`
 - `REPOSITORY_AUDIT_TOKEN`
 
+The architecture-drift workflow uses a separate least-privilege sync:
+
+| Property | Value |
+| --- | --- |
+| Doppler source of truth | Project `homelab-dev`, environment `github`, config `ci_architecture` |
+| Doppler secret name | `ERODE_GEMINI_API_KEY` |
+| GitHub sync target | Repository `Racerx323/homelab-dns`, Actions secrets |
+| Workflow consumer | `.github/workflows/architecture-drift.yml` |
+
+The `ci` root config contains only Doppler metadata. Its two branch configs
+separate credentials by consumer: `ci_governance` contains only the audit PAT,
+and `ci_architecture` contains only the Gemini key. Do not sync the root config
+or either branch to additional repositories without reviewing that boundary.
+
 Inspect names without printing values:
 
 ```bash
 doppler secrets \
   --project homelab-dev \
-  --config ci \
+  --config ci_governance \
   --only-names
 
 gh secret list --repo Racerx323/homelab-docs
+
+doppler secrets \
+  --project homelab-dev \
+  --config ci_architecture \
+  --only-names
+
+gh secret list --repo Racerx323/homelab-dns
 ```
 
 Trigger and verify the audit after initial setup or rotation:
@@ -163,7 +184,7 @@ summary or log and confirm `Policy violations: 0`.
 1. Create a replacement fine-grained PAT with the same single-repository,
    read-only scope and a defined expiration.
 2. Replace `REPOSITORY_AUDIT_TOKEN` in project `homelab-dev`, environment
-   `github`, config `ci`.
+   `github`, config `ci_governance`.
 3. Confirm the Doppler integration updates the GitHub Actions secret timestamp.
 4. Run the governance workflow and confirm zero violations.
 5. Revoke the old PAT in GitHub.

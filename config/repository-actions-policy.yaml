@@ -1,0 +1,78 @@
+---
+schema_version: 1
+owner: Racerx323
+enforcement: report-only
+
+reusable_workflow:
+  repository: Racerx323/homelab-docs
+  path: .github/workflows/reusable-validation.yml
+  ref: PENDING_MERGE_SHA
+
+profiles:
+  baseline:
+    required_workflows:
+      - .github/workflows/validation.yml
+  bats:
+    required_workflows:
+      - .github/workflows/bash-tests.yml
+  architecture:
+    required_workflows:
+      - .github/workflows/architecture-drift.yml
+  mermaid:
+    required_workflows:
+      - .github/workflows/mermaid.yml
+  container-security:
+    required_workflows:
+      - .github/workflows/container-security.yml
+  powershell:
+    required_workflows:
+      - .github/workflows/windows-powershell-tests.yml
+  terraform:
+    required_workflows:
+      - .github/workflows/terraform.yml
+
+repositories:
+  bash-bcs-workspace:
+    default_branch: master
+    visibility: private
+    profiles: [baseline, bats]
+  frame-and-sample:
+    default_branch: main
+    visibility: public
+    profiles: [baseline]
+  homelab-dns:
+    default_branch: main
+    visibility: public
+    profiles: [baseline, architecture]
+  homelab-docs:
+    default_branch: main
+    visibility: public
+    profiles: [baseline, mermaid]
+  homelab-monitoring-observability:
+    default_branch: main
+    visibility: public
+    profiles: [baseline]
+  homelab-network:
+    default_branch: main
+    visibility: public
+    profiles: [baseline]
+  homelab-notification:
+    default_branch: main
+    visibility: public
+    profiles: [baseline, container-security]
+  homelab-ntp:
+    default_branch: main
+    visibility: public
+    profiles: [baseline]
+  homelab-scripts:
+    default_branch: main
+    visibility: public
+    profiles: [baseline, powershell]
+  homelab-server-configs:
+    default_branch: main
+    visibility: public
+    profiles: [baseline]
+  homelab-terraform:
+    default_branch: main
+    visibility: public
+    profiles: [baseline, terraform]

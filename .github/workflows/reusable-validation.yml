@@ -1,0 +1,68 @@
+---
+name: Reusable repository validation
+
+'on':
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out caller repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install Ubuntu validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            gitleaks \
+            jq \
+            python3-venv \
+            shellcheck \
+            shfmt
+
+      - name: Install Python validation tools
+        run: |
+          python3 -m venv "${RUNNER_TEMP}/validation-venv"
+          "${RUNNER_TEMP}/validation-venv/bin/pip" install \
+            check-jsonschema==0.37.4 \
+            pre-commit==3.6.2 \
+            yamllint==1.33.0
+          echo "${RUNNER_TEMP}/validation-venv/bin" >> "${GITHUB_PATH}"
+
+      - name: Install Node.js validation tools
+        run: npm install --global markdownlint-cli2@0.23.1
+
+      - name: Install actionlint
+        run: |
+          mkdir -p "${RUNNER_TEMP}/validation-bin"
+          GOBIN="${RUNNER_TEMP}/validation-bin" \
+            go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          echo "${RUNNER_TEMP}/validation-bin" >> "${GITHUB_PATH}"
+
+      - name: Run shared pre-commit checks
+        shell: bash
+        run: |
+          hooks=(
+            shellcheck
+            shfmt
+            markdownlint-cli2
+            yamllint
+            actionlint
+            check-github-issue-forms
+            check-github-issue-config
+            check-compose
+            check-json
+          )
+          for hook in "${hooks[@]}"; do
+            pre-commit run "${hook}" --all-files
+          done
+
+      - name: Scan repository history for secrets
+        run: gitleaks detect --source . --redact --no-banner

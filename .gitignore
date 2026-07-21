@@ -7,5 +7,4 @@ Thumbs.db
 
 # vexp — repository-local runtime files
 /.vexp/*
-!/.vexp/manifest.json
 !/.vexp/.gitattributes

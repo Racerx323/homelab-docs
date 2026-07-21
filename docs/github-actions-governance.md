@@ -141,6 +141,12 @@ separate credentials by consumer: `ci_governance` contains only the audit PAT,
 and `ci_architecture` contains only the Gemini key. Do not sync the root config
 or either branch to additional repositories without reviewing that boundary.
 
+Erode loads the canonical `architecture/likec4` workspace. Keep that workspace
+valid with both the stack's pinned LikeC4 release and the LikeC4 release
+embedded by the pinned Erode action. Where a presentation feature is newer
+than Erode's parser, use an equivalent compatible view structure, such as
+separate sequence views for alternative paths.
+
 Inspect names without printing values:
 
 ```bash

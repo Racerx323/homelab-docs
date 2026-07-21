@@ -15,8 +15,18 @@ model {
   internet = externalSystem "Internet" {
     #external
   }
-  authoritativeDns = externalSystem "Root and Authoritative DNS" {
+  rootDns = externalSystem "Root DNS" {
     #external
+  }
+  tldDns = externalSystem "TLD DNS" {
+    #external
+  }
+  authoritativeDns = externalSystem "Authoritative DNS" {
+    #external
+  }
+  cloudflareDns = externalSystem "Cloudflare DNS" {
+    #external
+    description "DNS-over-TLS forwarding service used by the deployed Pi-hole v5 HA resolvers."
   }
   notificationProviders = externalSystem "Notification Providers" {
     #external

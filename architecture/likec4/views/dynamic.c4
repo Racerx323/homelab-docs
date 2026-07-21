@@ -1,16 +1,32 @@
 views "Operational Flows" {
-  dynamic view dns-query {
-    title "DNS Query"
+  dynamic view dns-ha-dot-query {
+    title "HA DNS Query through Cloudflare DoT"
     variant sequence
 
     clientDevices -> homelab.dnsPlatform.virtualIp "query DNS/53"
     homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "route to active node"
     homelab.dnsPlatform.node1.pihole -> homelab.dnsPlatform.node1.unbound "resolve via 127.0.0.1:5335"
-    homelab.dnsPlatform.node1.unbound -> authoritativeDns "recursive lookup"
-    homelab.dnsPlatform.node1.unbound <- authoritativeDns "DNS answer"
+    homelab.dnsPlatform.node1.unbound -> cloudflareDns "forward over DNS-over-TLS/853"
+    homelab.dnsPlatform.node1.unbound <- cloudflareDns "validated DNS answer"
     homelab.dnsPlatform.node1.pihole <- homelab.dnsPlatform.node1.unbound "filtered answer"
     homelab.dnsPlatform.virtualIp <- homelab.dnsPlatform.node1.pihole "response"
     clientDevices <- homelab.dnsPlatform.virtualIp "DNS answer"
+  }
+
+  dynamic view dns-ha-upgrade {
+    title "Rolling Unbound Upgrade on HA DNS Nodes"
+    variant sequence
+
+    operator -> homelab.dnsPlatform.node2.unbound "verify and install signed 1.25.1 package"
+    homelab.dnsPlatform.node2.pihole -> homelab.dnsPlatform.node2.unbound "validate local DNS/5335"
+    homelab.dnsPlatform.node2.pihole <- homelab.dnsPlatform.node2.unbound "healthy DNS response"
+    operator -> homelab.dnsPlatform.virtualIp "fail over VIP to pihole00"
+    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node2.pihole "serve validation traffic"
+    operator -> homelab.dnsPlatform.node1.unbound "verify and install signed 1.25.1 package"
+    homelab.dnsPlatform.node1.pihole -> homelab.dnsPlatform.node1.unbound "validate local DNS/5335"
+    homelab.dnsPlatform.node1.pihole <- homelab.dnsPlatform.node1.unbound "healthy DNS response"
+    operator -> homelab.dnsPlatform.virtualIp "restore preferred owner pihole0"
+    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "serve production traffic"
   }
 
   dynamic view dns-failover {

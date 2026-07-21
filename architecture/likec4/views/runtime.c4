@@ -17,7 +17,7 @@ views "Runtime Architecture" {
     title "Highly Available DNS"
     include *
     include homelab.dnsPlatform.**
-    include clientDevices, authoritativeDns, homelab.networkPlatform.gateway, homelab.automation.nebulaSync
+    include clientDevices, cloudflareDns, rootDns, homelab.networkPlatform.gateway, homelab.automation.nebulaSync
     autoLayout LeftRight
   }
 

@@ -1,0 +1,11 @@
+deployment {
+  referenceDeployment = environment "Pi-hole v6 and Unbound Reference" {
+    #reference
+
+    cleanDnsHost = server "Debian 12 Raspberry Pi 5" {
+      piholeV6 = instanceOf unboundReference.piholeV6
+      unbound1251 = instanceOf unboundReference.unbound1251
+      trustAnchor = instanceOf unboundReference.trustAnchor
+    }
+  }
+}

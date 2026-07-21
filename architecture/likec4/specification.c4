@@ -6,6 +6,7 @@ specification {
   tag infrastructure
   tag operations
   tag runtime
+  tag reference
 
   element person {
     notation "Person"

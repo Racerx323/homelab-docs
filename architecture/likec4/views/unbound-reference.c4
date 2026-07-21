@@ -1,0 +1,25 @@
+views "Unbound Reference Architecture" {
+  deployment view unbound-pihole-v6-reference {
+    title "Single-node Pi-hole v6 and Unbound 1.25.1"
+    description "Clean Debian 12 arm64 deployment on a Raspberry Pi 5."
+    include referenceDeployment.**
+    style referenceDeployment.* { color muted }
+    autoLayout LeftRight
+  }
+
+  dynamic view unbound-recursive-query {
+    title "Pi-hole v6 Recursive DNS Query"
+    variant sequence
+
+    clientDevices -> unboundReference.piholeV6 "query DNS/53"
+    unboundReference.piholeV6 -> unboundReference.unbound1251 "forward to loopback DNS/5335"
+    unboundReference.unbound1251 -> rootDns "query root over UDP/TCP 53"
+    unboundReference.unbound1251 <- rootDns "TLD referral"
+    unboundReference.unbound1251 -> tldDns "query TLD over UDP/TCP 53"
+    unboundReference.unbound1251 <- tldDns "authoritative referral"
+    unboundReference.unbound1251 -> authoritativeDns "query authoritative server"
+    unboundReference.unbound1251 <- authoritativeDns "DNSSEC-signed answer"
+    unboundReference.piholeV6 <- unboundReference.unbound1251 "validated answer"
+    clientDevices <- unboundReference.piholeV6 "filtered DNS answer"
+  }
+}

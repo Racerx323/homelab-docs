@@ -15,7 +15,9 @@ deployment topology.
 - `observability`: Prometheus, Grafana, Alertmanager, exporters, and Munin
 - `provisioning-and-operations`: Terraform, server configuration, scripts, and sync automation
 - `deployment-homelab`: physical deployment nodes and named service instances
-- `dns-query`, `dns-failover`, `alert-delivery`, and `pi-hole-sync`: sequence views
+- `dns-ha-dot-query`, `dns-ha-upgrade`, `dns-failover`, `alert-delivery`, and `pi-hole-sync`: sequence views
+- `unbound-pihole-v6-reference`: clean single-node Pi-hole v6 deployment
+- `unbound-recursive-query`: full recursive DNS sequence for the clean deployment
 
 ## Local usage
 

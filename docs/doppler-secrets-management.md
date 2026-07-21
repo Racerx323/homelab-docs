@@ -73,6 +73,19 @@ Doppler organizes secrets as projects and configs. The `homelab-dev` project
 is the shared boundary for development tooling. The default `dev_personal`
 space keeps personal values separate from shared defaults and other users.
 
+The deployed project layout is:
+
+| Environment | Configs | Purpose |
+| --- | --- | --- |
+| Development | `dev`, `dev_personal` | Shared development defaults and personal development credentials |
+| Staging | `stg` | Staging credentials and configuration |
+| Production | `prd` | Production credentials and configuration |
+| `github` | `ci` | GitHub Actions credentials synchronized to repository secrets |
+
+The lowercase `github` environment is intentionally separate from Development,
+Staging, and Production. Its `ci` config is the source for the
+`homelab-docs` GitHub Actions integration.
+
 In the Doppler dashboard:
 
 1. Open the `homelab-dev` project.

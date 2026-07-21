@@ -70,6 +70,12 @@ This document outlines the various automated agents and services that have acces
   - [ ] Changes have been reviewed by at least one other person
 
 
+## CodeRabbit reviews
+
+CodeRabbit requires external network access. Run all `coderabbit review` commands with network escalation (`sandbox_permissions: "require_escalated"`). Request the reusable approval prefix `["coderabbit", "review"]`.
+
+Do not wait for a sandboxed review to time out. If it stalls while connecting, rerun it immediately with network escalation.
+
 ## vexp <!-- vexp v2.1.7 -->
 
 **MANDATORY: use `run_pipeline` - do NOT grep or glob the codebase.**

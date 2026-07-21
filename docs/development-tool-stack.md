@@ -309,27 +309,29 @@ Python/jq-wrapper package named `yq`.
 
 All managed repositories use local pre-commit hooks for applicable files:
 ShellCheck, shfmt, markdownlint-cli2, yamllint, GitHub issue-form schemas,
-Compose schemas, JSON parsing with jq, and Gitleaks. Repositories containing
-GitHub Actions also run actionlint. A hook runs only when a repository contains
-a matching file type. Repository-specific coverage is:
+Compose schemas, JSON parsing with jq, Gitleaks, and actionlint. Every managed
+repository calls the shared baseline GitHub Actions workflow. A hook runs only
+when a repository contains a matching file type. Repository-specific coverage
+is:
 
 | Repository | Primary content | Additional tools and validation |
 | --- | --- | --- |
-| `bash-bcs-workspace` | Bash, Bats tests, Markdown, environment templates | BCS with Ollama; shfmt uses two-space indentation |
-| `frame-and-sample` | Markdown documentation and templates | Shared documentation, YAML, and secret checks |
-| `homelab-dns` | Bash, service configuration, Markdown | ShellCheck and shfmt for msmtp helpers; actionlint for architecture-drift workflow |
-| `homelab-docs` | Markdown, GitHub YAML, LikeC4, and Mermaid | Shared checks; LikeC4, Mermaid, and GitHub Actions validation; manual Erode drift analysis; owns this inventory |
+| `bash-bcs-workspace` | Bash, Bats tests, Markdown, environment templates | BCS with Ollama; two-space shfmt; Bats CI |
+| `frame-and-sample` | Markdown documentation and templates | Baseline workflow and new-repository template |
+| `homelab-dns` | Bash, service configuration, Markdown | Shell validation; architecture-drift workflow |
+| `homelab-docs` | Markdown, GitHub YAML, LikeC4, and Mermaid | LikeC4, Mermaid, baseline, and governance workflows; manual Erode drift analysis; owns this inventory |
 | `homelab-monitoring-observability` | Apache and Munin configuration documentation | Shared checks for applicable files |
 | `homelab-network` | Network documentation and repository scaffolding | Shared checks for applicable files |
-| `homelab-notification` | Bash, Podman Compose YAML, JSON examples, service configuration | Compose schema checks; manual Trivy scans of Apprise API and Mailrise images |
+| `homelab-notification` | Bash, Podman Compose YAML, JSON examples, service configuration | Compose schema checks; scheduled and manual Trivy image scans |
 | `homelab-ntp` | NTPsec documentation and configuration scaffolding | Shared checks for applicable files |
-| `homelab-scripts` | PowerShell, registry files, Task Scheduler XML, Markdown | Pester on Windows; actionlint; GitHub Actions with Pester 5; shared checks for applicable WSL-side files |
+| `homelab-scripts` | PowerShell, registry files, Task Scheduler XML, Markdown | Pester 5 on Windows plus baseline validation |
 | `homelab-server-configs` | Webmin and watchdog configuration scaffolding | Shared checks for applicable files |
-| `homelab-terraform` | Terraform HCL and Markdown | Terraform, TFLint, terraform-docs, and Trivy configuration scanning |
+| `homelab-terraform` | Terraform HCL and Markdown | Terraform, TFLint, terraform-docs, and Trivy CI |
 
 The PowerShell workflow is intentionally path-filtered to the two Windows tool
 directories and its own workflow file. Its job has read-only repository
-permissions and uses `actions/checkout@v5` on `windows-latest`.
+permissions and uses an immutable `actions/checkout` commit on
+`windows-latest`.
 
 ## Maintenance
 

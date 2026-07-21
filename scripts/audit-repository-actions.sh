@@ -138,11 +138,13 @@ check_workflow_structure() {
                 "${workflow_path}: top-level permissions missing"
         fi
 
-        has_pull_request="$(yq eval '.on | has("pull_request")' \
-            "${workflow_file}")"
-        if [[ "${has_pull_request}" != "true" ]]; then
-            record_result FAIL "${repository}" \
-                "${workflow_path}: pull_request trigger missing"
+        if [[ "${workflow_path}" == ".github/workflows/validation.yml" ]]; then
+            has_pull_request="$(yq eval '.on | has("pull_request")' \
+                "${workflow_file}")"
+            if [[ "${has_pull_request}" != "true" ]]; then
+                record_result FAIL "${repository}" \
+                    "${workflow_path}: pull_request trigger missing"
+            fi
         fi
 
         while IFS= read -r uses_reference; do

@@ -42,6 +42,16 @@ require_mermaid_cli() {
     fi
 }
 
+run_mermaid_cli() {
+    local -a configuration=()
+
+    if [[ -n "${MERMAID_PUPPETEER_CONFIG:-}" ]]; then
+        configuration+=(--puppeteerConfigFile "${MERMAID_PUPPETEER_CONFIG}")
+    fi
+
+    mmdc "${configuration[@]}" "$@"
+}
+
 validate_files() (
     local temporary_directory index file
     local -a files=("$@")
@@ -68,7 +78,7 @@ validate_files() (
 
         index=$((index + 1))
         printf 'Validating %s\n' "${file}"
-        mmdc --input "${file}" --output "${temporary_directory}/${index}.svg"
+        run_mermaid_cli --input "${file}" --output "${temporary_directory}/${index}.svg"
     done
 )
 
@@ -90,7 +100,7 @@ render_file() {
     esac
 
     mkdir -p "$(dirname "${output_file}")"
-    mmdc --input "${input_file}" --output "${output_file}"
+    run_mermaid_cli --input "${input_file}" --output "${output_file}"
 }
 
 main() {

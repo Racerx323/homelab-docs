@@ -149,6 +149,10 @@ action-input, reusable-workflow, and inline-script checks. See
 [actionlint Installation and Configuration](actionlint-installation-and-configuration.md)
 for installation, pre-commit integration, and upgrades.
 
+Shared workflow presence, immutable action references, permissions, and
+pull-request coverage are governed by
+[GitHub Actions Governance](github-actions-governance.md).
+
 ## Security and container validation
 
 | Tool | Version | Purpose |

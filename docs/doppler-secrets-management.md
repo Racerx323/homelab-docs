@@ -28,12 +28,22 @@ Doppler homelab-dev/dev_personal
 GitHub CLI credential store
              |
              +-- gh auth token -> ERODE_GITHUB_TOKEN for one Erode process
+
+Doppler homelab-dev, environment github, config ci
+             |
+             | GitHub Actions integration sync
+             v
+homelab-docs Actions secret: REPOSITORY_AUDIT_TOKEN
+             |
+             +-- governance audit reads bash-bcs-workspace
 ```
 
 This separation is intentional:
 
 - Doppler manages third-party API keys and other development secrets.
-- GitHub CLI continues to manage the GitHub credential.
+- GitHub CLI continues to manage interactive local GitHub credentials.
+- A separate least-privilege GitHub PAT for CI is stored in Doppler and synced
+  to GitHub Actions; it is never derived from the GitHub CLI OAuth token.
 - Non-secret settings remain in normal configuration files.
 - Secrets are not loaded globally by `.bashrc`, `.profile`, or an interactive
   shell.
@@ -91,6 +101,19 @@ model path is ordinary configuration and should not be treated as a secret.
 Use uppercase names with underscores for future secrets. Prefer names scoped
 to the consuming tool, such as `TERRAFORM_CLOUD_TOKEN`, over a generic name
 such as `API_KEY`.
+
+The shared CI config has a separate inventory:
+
+| Variable | Store | Purpose |
+| --- | --- | --- |
+| `REPOSITORY_AUDIT_TOKEN` | Doppler `homelab-dev/ci` | Read-only access to private `bash-bcs-workspace` during governance audits |
+| `DOPPLER_PROJECT` | Doppler integration metadata | Identifies `homelab-dev` at the GitHub sync target |
+| `DOPPLER_ENVIRONMENT` | Doppler integration metadata | Identifies the `github` environment |
+| `DOPPLER_CONFIG` | Doppler integration metadata | Identifies the `ci` config |
+
+`REPOSITORY_AUDIT_TOKEN` is a fine-grained GitHub PAT restricted to Contents
+and Metadata read access for only `bash-bcs-workspace`. It must not have write,
+administration, workflow, issue, or pull-request permissions.
 
 ## Install the Doppler CLI in WSL
 
@@ -354,19 +377,42 @@ wrapper invoke only the tool that requires a credential.
 Local CLI authentication is for interactive development only. Never copy the
 local Doppler CLI token into a repository or reuse it as a CI credential.
 
-For initial GitHub Actions automation:
+The GitHub Actions governance audit uses the deployed Doppler GitHub
+integration:
 
-1. Keep workflow credentials in GitHub Actions secrets.
-2. Restrict workflow permissions with the `permissions` block.
-3. Pin third-party actions to reviewed versions or commit SHAs.
-4. Do not expose secrets to workflows from untrusted forks.
+1. Doppler project `homelab-dev`, environment `github`, and config `ci` are the
+   source of truth.
+2. The integration sync target is the `homelab-docs` repository's Actions
+   secrets.
+3. `REPOSITORY_AUDIT_TOKEN` is the only application credential required by the
+   governance workflow.
+4. The workflow uses `secrets.REPOSITORY_AUDIT_TOKEN` as `GH_TOKEN` and falls
+   back to `github.token` when the secret is unavailable.
+5. The token grants read access only to the private repository that the default
+   workflow token cannot clone.
 
-If central Doppler integration becomes worthwhile, migrate CI to a dedicated
-Doppler workload identity using GitHub OIDC. Grant it access only to the
-required project and config. Do not use a personal service token.
+The integration pushes an encrypted execution copy to GitHub; the workflow does
+not retrieve the PAT from Doppler at runtime. Do not add a Doppler service token
+or run the governance job through `doppler run`. Continue to restrict workflow
+permissions, pin third-party actions to full commit SHAs, and avoid exposing
+secrets to workflows from untrusted forks.
 
-Local `dev_personal`, shared CI, staging, and production must remain separate
-configs with separate credentials.
+Local `dev_personal`, the `github` environment's `ci` config, staging, and
+production must remain separate credential boundaries.
+
+Inspect the CI inventory without displaying values:
+
+```bash
+doppler secrets \
+  --project homelab-dev \
+  --config ci \
+  --only-names
+
+gh secret list --repo Racerx323/homelab-docs
+```
+
+See [GitHub Actions Governance](github-actions-governance.md) for PAT creation,
+workflow verification, rotation, revocation, and incident response.
 
 ## Verification checklist
 
@@ -388,6 +434,10 @@ doppler secrets \
 
 # GitHub CLI remains the GitHub credential source.
 gh auth status
+
+# CI secret names and synchronized GitHub target, without values.
+doppler secrets --project homelab-dev --config ci --only-names
+gh secret list --repo Racerx323/homelab-docs
 
 # Trusted Erode wrapper.
 command -v erode-drift
@@ -412,6 +462,12 @@ Also verify that secret values are absent from:
 
 Prefer a short overlap where both keys work, then revoke the old key after
 verification. Updating Doppler does not revoke the original provider key.
+
+For `REPOSITORY_AUDIT_TOKEN`, create the replacement in GitHub first, update
+the value in project `homelab-dev`, environment `github`, config `ci`, wait for
+the GitHub Actions sync, run the governance audit, and then revoke the old PAT.
+Confirm the audit log reports zero policy violations. Emergency exposure
+requires immediate revocation and replacement rather than an overlap window.
 
 If a secret may have entered Git history or terminal logs, rotate it. Removing
 the text alone does not make the old credential safe.
@@ -509,7 +565,8 @@ provider credentials. Revoke or delete those separately when appropriate.
 5. Use Erode manually until results and provider cost are understood.
 6. Add the manual pre-commit hook to selected repositories.
 7. Promote it to pre-push only when reliable enough to block pushes.
-8. Use a separate OIDC workload identity before integrating Doppler with CI.
+8. Keep CI credentials in the separate `github` environment and `ci` config;
+   synchronize them through the reviewed GitHub Actions integration.
 
 ## References
 
@@ -520,3 +577,6 @@ provider credentials. Revoke or delete those separately when appropriate.
 - [Root and branch configs](https://docs.doppler.com/docs/root-configs)
 - [CLI troubleshooting](https://docs.doppler.com/docs/cli-troubleshooting)
 - [Doppler MCP server](https://docs.doppler.com/docs/mcp)
+- [Doppler GitHub Actions integration](https://docs.doppler.com/docs/github-actions)
+- [GitHub fine-grained personal access tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
+- [GitHub Actions secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets)

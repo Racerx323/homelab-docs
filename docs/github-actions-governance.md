@@ -21,6 +21,26 @@ The policy starts in `report-only` mode. Missing or invalid workflows are
 reported without failing the scheduled governance job. Change both the policy
 and workflow invocation deliberately when enforcement is approved.
 
+## Implementation status
+
+The governance rollout is complete for every repository in the policy
+manifest. Each repository has the shared baseline caller, the actionlint
+pre-commit hook, and any workflows required by its assigned profiles.
+
+| Profile | Repository coverage |
+| --- | --- |
+| Baseline | All managed repositories |
+| Bats | `bash-bcs-workspace` |
+| Architecture | `homelab-dns` |
+| Mermaid and LikeC4 | `homelab-docs` |
+| Container security | `homelab-notification` |
+| PowerShell | `homelab-scripts` |
+| Terraform | `homelab-terraform` |
+
+The reusable baseline is pinned to the immutable commit recorded in
+`config/repository-actions-policy.yaml`. The remote audit was verified on July
+21, 2026 against all 11 managed repositories with zero policy violations.
+
 ## Baseline validation
 
 The reusable baseline installs the versions recorded in
@@ -64,11 +84,93 @@ scripts/audit-repository-actions.sh --remote
 Most managed repositories are public. `bash-bcs-workspace` is private, so the
 governance repository requires a `REPOSITORY_AUDIT_TOKEN` Actions secret. Use a
 fine-grained personal access token with read-only Contents and Metadata access
-to only the managed repositories. The workflow falls back to its repository
-`GITHUB_TOKEN`, but that token cannot clone the private repository.
+to only `bash-bcs-workspace`. The workflow falls back to its repository
+`GITHUB_TOKEN`, but that token cannot clone the private repository. An
+inaccessible repository is counted as a policy violation even in report-only
+mode.
 
 Do not grant write, administration, workflow, issue, or pull-request permission
 to the audit token.
+
+### Audit credential inventory
+
+| Property | Value |
+| --- | --- |
+| Credential | Fine-grained GitHub personal access token |
+| GitHub resource owner | `Racerx323` |
+| GitHub repository access | Only `bash-bcs-workspace` |
+| GitHub repository permissions | Contents: read; Metadata: read |
+| Doppler source of truth | Project `homelab-dev`, environment `github`, config `ci` |
+| Doppler secret name | `REPOSITORY_AUDIT_TOKEN` |
+| GitHub sync target | Repository `Racerx323/homelab-docs`, Actions secrets |
+| Workflow consumer | `.github/workflows/repository-governance.yml` |
+
+The token value belongs only in Doppler and the encrypted GitHub Actions secret
+created by the Doppler integration. Never put it in documentation, repository
+files, shell history, issue text, workflow input, or a local `.env` file. Do not
+reuse the broader GitHub CLI OAuth token.
+
+### Doppler-to-GitHub sync
+
+The Doppler GitHub integration synchronizes config `ci` in the `github`
+environment of project `homelab-dev` to the Actions secrets for
+`homelab-docs`. Doppler is the source of truth; GitHub stores the execution copy
+consumed by the workflow. Update and rotate the value in Doppler, not directly
+in GitHub, so later synchronization cannot overwrite an out-of-band change.
+
+The workflow does not fetch secrets from Doppler at runtime and therefore does
+not need a Doppler service token. The GitHub repository currently receives
+these synchronized secret names:
+
+- `DOPPLER_PROJECT`
+- `DOPPLER_ENVIRONMENT`
+- `DOPPLER_CONFIG`
+- `REPOSITORY_AUDIT_TOKEN`
+
+Inspect names without printing values:
+
+```bash
+doppler secrets \
+  --project homelab-dev \
+  --config ci \
+  --only-names
+
+gh secret list --repo Racerx323/homelab-docs
+```
+
+Trigger and verify the audit after initial setup or rotation:
+
+```bash
+gh workflow run repository-governance.yml \
+  --repo Racerx323/homelab-docs
+
+gh run list \
+  --repo Racerx323/homelab-docs \
+  --workflow repository-governance.yml \
+  --limit 1
+
+gh run watch RUN_ID \
+  --repo Racerx323/homelab-docs \
+  --exit-status
+```
+
+Because the audit is report-only, a successful workflow conclusion means the
+audit executed, not necessarily that the violation count is zero. Open the run
+summary or log and confirm `Policy violations: 0`.
+
+### Rotate or revoke the audit PAT
+
+1. Create a replacement fine-grained PAT with the same single-repository,
+   read-only scope and a defined expiration.
+2. Replace `REPOSITORY_AUDIT_TOKEN` in project `homelab-dev`, environment
+   `github`, config `ci`.
+3. Confirm the Doppler integration updates the GitHub Actions secret timestamp.
+4. Run the governance workflow and confirm zero violations.
+5. Revoke the old PAT in GitHub.
+
+If the token is exposed or suspected of misuse, revoke it immediately, create
+a replacement, update Doppler, rerun the audit, and review GitHub and Doppler
+audit logs. Do not wait for the normal rotation window.
 
 ## Add a repository
 

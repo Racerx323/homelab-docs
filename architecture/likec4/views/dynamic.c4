@@ -30,22 +30,23 @@ views "Operational Flows" {
   }
 
   dynamic view dns-failover {
-    title "DNS VRRP Failover"
+    title "DNS VRRP Primary Healthy"
     variant sequence
 
     homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.node2.keepalived "VRRP advertisements"
-    alt "DNS node health" {
-      when "primary is healthy" {
-        homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.virtualIp "retains VIP"
-        clientDevices -> homelab.dnsPlatform.virtualIp "DNS query"
-        homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "serve on primary"
-      }
-      else "primary fails" {
-        homelab.dnsPlatform.node2.keepalived -> homelab.dnsPlatform.virtualIp "claims VIP"
-        clientDevices -> homelab.dnsPlatform.virtualIp "DNS query"
-        homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node2.pihole "serve on backup"
-      }
-    }
+    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.virtualIp "retains VIP while primary is healthy"
+    clientDevices -> homelab.dnsPlatform.virtualIp "DNS query"
+    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "serve on primary"
+  }
+
+  dynamic view dns-failover-primary-failure {
+    title "DNS VRRP Primary Failure"
+    variant sequence
+
+    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.node2.keepalived "VRRP advertisements stop"
+    homelab.dnsPlatform.node2.keepalived -> homelab.dnsPlatform.virtualIp "claims VIP after primary failure"
+    clientDevices -> homelab.dnsPlatform.virtualIp "DNS query"
+    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node2.pihole "serve on backup"
   }
 
   dynamic view alert-delivery {

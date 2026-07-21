@@ -254,6 +254,18 @@ coderabbit review --plain
 The CLI is sufficient for terminal and Codex review workflows; a VS Code
 extension is optional.
 
+Every managed repository contains a root `.coderabbit.yaml` that inherits the
+CodeRabbit organization settings and applies the shared draft-first policy:
+
+- automatic reviews remain enabled for ready pull requests;
+- draft pull requests are not reviewed;
+- skipped-draft status comments are suppressed.
+
+This avoids consuming review capacity during active draft work while keeping
+the organization configuration as the source for all other review behavior.
+Comment `@coderabbitai review` on a pull request to request an incremental
+review manually.
+
 ## Secrets and credentials
 
 | Tool | Version | Purpose |

@@ -14,8 +14,29 @@ model {
     trustAnchor = datastore "DNSSEC Trust Anchor" {
       description "RFC 5011 root trust anchor maintained in /var/lib/unbound/root.key."
     }
+    releasePipeline = automation "Bookworm arm64 Release Pipeline" {
+      description "Authenticates Debian source, builds natively in an updated clean sbuild chroot, and runs package tests."
+    }
+    backportPackage = artifact "Unbound 1.25.1 Bookworm Backport" {
+      description "Debian package set pinned to 1.25.1-1~bookworm1 with Debian service integration preserved."
+    }
+    profilePackage = artifact "unbound-pihole-profile" {
+      description "Independent architecture-neutral package containing the loopback-only recursive profile and socket sysctls."
+    }
+    signedBundle = artifact "Signed Release Bundle" {
+      description "Arm64/all packages, source, changes, buildinfo, manifest, test results, runbooks, checksums, and detached signature."
+    }
   }
 
+  operator -[uses]-> unboundReference.releasePipeline "approves intentional release build"
+  unboundReference.releasePipeline -[builds]-> unboundReference.backportPackage "native Debian 12 arm64 sbuild"
+  unboundReference.releasePipeline -[builds]-> unboundReference.profilePackage "independent package lifecycle"
+  unboundReference.releasePipeline -[builds]-> unboundReference.signedBundle "signs reviewed release inputs"
+  unboundReference.signedBundle -[uses]-> unboundReference.backportPackage "contains exact package closure"
+  unboundReference.signedBundle -[uses]-> unboundReference.profilePackage "contains architecture-independent profile"
+  operator -[verifies]-> unboundReference.signedBundle "trusted key and SHA-256 checks"
+  unboundReference.backportPackage -[installs]-> unboundReference.unbound1251 "application binaries and Debian integration"
+  unboundReference.profilePackage -[configures]-> unboundReference.unbound1251 "managed loopback DNS/5335 profile"
   clientDevices -[queries]-> unboundReference.piholeV6 "DNS/53"
   unboundReference.piholeV6 -[resolves]-> unboundReference.unbound1251 "127.0.0.1 and ::1 on DNS/5335"
   unboundReference.unbound1251 -[uses]-> unboundReference.trustAnchor "validates DNSSEC"

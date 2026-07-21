@@ -1,10 +1,31 @@
 views "Unbound Reference Architecture" {
+  deployment view unbound-release-build {
+    title "Unbound 1.25.1 Bookworm Build and Release"
+    description "Native Debian 12 arm64 sbuild pipeline and signed release artifacts."
+    include releaseBuild.**
+    style releaseBuild.* { color muted }
+    autoLayout LeftRight
+  }
+
   deployment view unbound-pihole-v6-reference {
     title "Single-node Pi-hole v6 and Unbound 1.25.1"
     description "Clean Debian 12 arm64 deployment on a Raspberry Pi 5."
     include referenceDeployment.**
     style referenceDeployment.* { color muted }
     autoLayout LeftRight
+  }
+
+  dynamic view unbound-release-flow {
+    title "Pinned Unbound Build and Release"
+    variant sequence
+
+    operator -> unboundReference.releasePipeline "request pinned 1.25.1-1 backport"
+    unboundReference.releasePipeline -> unboundReference.backportPackage "build 1.25.1-1~bookworm1 and run tests"
+    unboundReference.releasePipeline -> unboundReference.profilePackage "build architecture-independent profile"
+    unboundReference.releasePipeline -> unboundReference.signedBundle "assemble manifest, runbooks, and checksums"
+    operator <- unboundReference.signedBundle "detached-signature candidate"
+    operator -> unboundReference.signedBundle "verify trusted key and SHA-256 checks"
+    operator -> unboundReference.unbound1251 "install on one approved target at a time"
   }
 
   dynamic view unbound-recursive-query {

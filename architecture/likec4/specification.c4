@@ -45,6 +45,10 @@ specification {
     notation "Documentation"
     style { shape document }
   }
+  element artifact {
+    notation "Release Artifact"
+    style { shape document }
+  }
   element externalSystem {
     notation "External System"
   }
@@ -63,6 +67,9 @@ specification {
   relationship documents
   relationship hosts
   relationship manages
+  relationship builds
+  relationship verifies
+  relationship installs
 
   deploymentNode environment {
     notation "Environment"

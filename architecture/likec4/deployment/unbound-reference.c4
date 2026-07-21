@@ -1,4 +1,15 @@
 deployment {
+  releaseBuild = environment "Unbound Release Build" {
+    #operations
+
+    buildHost = workstation "Native Debian 12 arm64 Builder" {
+      pipeline = instanceOf unboundReference.releasePipeline
+      backport = instanceOf unboundReference.backportPackage
+      profile = instanceOf unboundReference.profilePackage
+      bundle = instanceOf unboundReference.signedBundle
+    }
+  }
+
   referenceDeployment = environment "Pi-hole v6 and Unbound Reference" {
     #reference
 

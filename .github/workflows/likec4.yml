@@ -1,0 +1,45 @@
+---
+name: LikeC4
+
+'on':
+  pull_request:
+    paths:
+      - '**/*.c4'
+      - '**/*.likec4'
+      - '.github/workflows/likec4.yml'
+      - 'likec4.config.*'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.c4'
+      - '**/*.likec4'
+      - '.github/workflows/likec4.yml'
+      - 'likec4.config.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate LikeC4
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: '26.4.0'
+
+      - name: Install LikeC4
+        run: npm install --global likec4@1.59.1
+
+      - name: Check formatting
+        run: likec4 format --check
+
+      - name: Validate model
+        run: likec4 validate

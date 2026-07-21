@@ -49,8 +49,9 @@ scripts/audit-repository-actions.sh --enforce
 ```
 
 The audit verifies required workflow paths, the actionlint pre-commit hook,
-workflow syntax, pull-request triggers, explicit permissions, and immutable
-external action references.
+workflow syntax, baseline pull-request coverage, explicit permissions, and
+immutable external action references. Specialized scheduled workflows do not
+need artificial pull-request triggers.
 
 ## Run the remote audit
 

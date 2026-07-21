@@ -6,7 +6,7 @@ enforcement: report-only
 reusable_workflow:
   repository: Racerx323/homelab-docs
   path: .github/workflows/reusable-validation.yml
-  ref: PENDING_MERGE_SHA
+  ref: 7d09aae0bdf0fe80bc10263d1e8e5c682037d848
 
 profiles:
   baseline:
@@ -21,6 +21,9 @@ profiles:
   mermaid:
     required_workflows:
       - .github/workflows/mermaid.yml
+  likec4:
+    required_workflows:
+      - .github/workflows/likec4.yml
   container-security:
     required_workflows:
       - .github/workflows/container-security.yml
@@ -47,7 +50,7 @@ repositories:
   homelab-docs:
     default_branch: main
     visibility: public
-    profiles: [baseline, mermaid]
+    profiles: [baseline, likec4, mermaid]
   homelab-monitoring-observability:
     default_branch: main
     visibility: public

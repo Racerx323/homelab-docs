@@ -53,8 +53,9 @@ The file filter avoids running actionlint for unrelated YAML changes.
 `pass_filenames: false` makes actionlint inspect the complete workflow set so it
 can validate references between reusable workflows.
 
-Add the hook when a repository gains its first file under
-`.github/workflows/`. Repositories without workflows do not need the hook.
+Every managed repository now has a baseline workflow and this hook. Keep both
+files in `frame-and-sample` so repositories created from the template begin
+with the same coverage.
 
 ## Upgrade
 

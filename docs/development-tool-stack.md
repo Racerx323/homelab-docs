@@ -266,6 +266,13 @@ provider credential. GitHub CLI remains the source of its GitHub token. See
 and [Doppler Secrets Management](doppler-secrets-management.md) for the
 credential-scoped wrapper and security boundaries.
 
+GitHub Actions governance uses Doppler project `homelab-dev`, environment
+`github`, and config `ci`. Its `REPOSITORY_AUDIT_TOKEN` is a read-only
+fine-grained GitHub PAT restricted to the private `bash-bcs-workspace`
+repository and synchronized into the `homelab-docs` Actions secrets. See
+[GitHub Actions Governance](github-actions-governance.md) for its permissions,
+verification, rotation, and revocation procedures.
+
 ## Supporting runtimes and package managers
 
 | Tool | Version | Current use |

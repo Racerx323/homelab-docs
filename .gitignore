@@ -5,18 +5,7 @@
 Thumbs.db
 
 
-# vexp — internal files (auto-generated, not user-managed)
-# index.db is rebuilt from manifest.json on checkout
-.vexp/index.db
-.vexp/index.db-wal
-.vexp/index.db-shm
-.vexp/vexp.log
-.vexp/daemon.log
-.vexp/daemon.sock
-.vexp/daemon.pid
-.vexp/daemon.pipe
-.vexp/mcp.port
-.vexp/healthy
-.vexp/parent_workspace.json
-.vexp/token-savings-report.md
-.vexp/index.lock
+# vexp — repository-local runtime files
+/.vexp/*
+!/.vexp/manifest.json
+!/.vexp/.gitattributes

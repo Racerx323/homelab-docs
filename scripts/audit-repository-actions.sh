@@ -11,6 +11,7 @@ enforce=false
 workspace_root="$(dirname "${REPOSITORY_ROOT}")"
 issue_count=0
 temporary_directory=""
+loaded_repository_path=""
 
 usage() {
     printf '%s\n' \
@@ -52,21 +53,19 @@ prepare_remote_workspace() {
 load_repository() {
     local owner="$1"
     local repository="$2"
-    local repository_path="${workspace_root}/${repository}"
+    loaded_repository_path="${workspace_root}/${repository}"
 
     if [[ "${audit_mode}" == "remote" ]]; then
-        if ! gh repo clone "${owner}/${repository}" "${repository_path}" -- \
+        if ! gh repo clone "${owner}/${repository}" "${loaded_repository_path}" -- \
             --depth=1 --quiet; then
             record_result FAIL "${repository}" "unable to clone repository"
             return 1
         fi
-    elif [[ ! -d "${repository_path}/.git" ]]; then
+    elif [[ ! -d "${loaded_repository_path}/.git" ]]; then
         record_result FAIL "${repository}" \
             "checkout missing below ${workspace_root}"
         return 1
     fi
-
-    printf '%s\n' "${repository_path}"
 }
 
 check_actionlint_hook() {
@@ -243,9 +242,10 @@ main() {
     )
 
     for repository in "${repositories[@]}"; do
-        if ! repository_path="$(load_repository "${owner}" "${repository}")"; then
+        if ! load_repository "${owner}" "${repository}"; then
             continue
         fi
+        repository_path="${loaded_repository_path}"
         check_required_workflows "${repository}" "${repository_path}"
         check_actionlint_hook "${repository}" "${repository_path}"
         check_workflow_structure "${repository}" "${repository_path}"

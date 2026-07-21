@@ -147,6 +147,12 @@ embedded by the pinned Erode action. Where a presentation feature is newer
 than Erode's parser, use an equivalent compatible view structure, such as
 separate sequence views for alternative paths.
 
+The workflow pins both Erode Gemini model tiers to `gemini-3.1-flash-lite`.
+That stable model was verified with the scoped `ci_architecture` credential.
+Model IDs are non-secret configuration and belong in the workflow, while only
+the API key belongs in Doppler. Review Google's model lifecycle before changing
+the IDs; do not rely on Erode's embedded defaults remaining available.
+
 Inspect names without printing values:
 
 ```bash

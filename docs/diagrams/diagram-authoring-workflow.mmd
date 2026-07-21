@@ -1,0 +1,11 @@
+flowchart LR
+    Architecture[Architecture change] --> LikeC4[Edit LikeC4 model]
+    LikeC4 --> ValidateLikeC4[Validate LikeC4]
+    ValidateLikeC4 --> Generate[Generate Mermaid source]
+
+    Document[Document-local diagram] --> Mermaid[Edit Mermaid source]
+
+    Generate --> ValidateMermaid[Validate with pinned Mermaid CLI]
+    Mermaid --> ValidateMermaid
+    ValidateMermaid --> GitHub[Publish source on GitHub]
+    ValidateMermaid --> Export[Export SVG, PNG, or PDF]

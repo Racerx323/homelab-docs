@@ -32,6 +32,13 @@ repos:
         language: system
         types: [yaml]
 
+      - id: actionlint
+        name: Validate GitHub Actions workflows
+        entry: actionlint
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+
       - id: check-github-issue-forms
         name: Validate GitHub issue forms
         entry: >-
@@ -77,6 +84,12 @@ repos:
         files: >-
           (?:\.(?:c4|likec4)$|(?:^|/)likec4\.config\.(?:json|js|ts)$|(?:^|/)\.likec4rc$)
         pass_filenames: false
+
+      - id: mermaid-validate
+        name: Validate Mermaid diagrams
+        entry: scripts/mermaid-tool.sh validate
+        language: system
+        files: \.(?:mmd|mermaid)$
 
       - id: erode-architecture-drift
         name: Check architecture drift with Erode

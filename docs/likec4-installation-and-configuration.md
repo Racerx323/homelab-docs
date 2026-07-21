@@ -252,6 +252,43 @@ likec4 export json -o ./likec4-model.json
 Run `likec4 format` only when intentionally updating source files. Use
 `likec4 format --check` in automated validation.
 
+### Optional PNG and JPEG export runtime
+
+Routine LikeC4 work does not require a browser. Formatting, validation, MCP
+queries, the preview server, static-site builds, and JSON or DrawIO exports run
+without a separately downloaded Chromium binary. Keep those browser-free
+commands as the default development and CI workflow.
+
+Only `likec4 export png` and `likec4 export jpg` render views through
+Playwright's headless Chromium. LikeC4 includes the Playwright Node.js package,
+but Playwright manages its browser binary separately under
+`~/.cache/ms-playwright` on Linux. The download can consume several hundred
+megabytes and is an optional publication dependency, not a core workstation
+tool.
+
+Install Chromium on demand before a raster export. Match the Playwright version
+to the version bundled by the installed LikeC4 release. LikeC4 1.59.1 uses
+Playwright 1.60.0:
+
+```bash
+npx --yes playwright@1.60.0 install chromium
+likec4 export png -o ./exports architecture/likec4
+```
+
+Recheck LikeC4's packaged Playwright version after upgrading the global CLI
+before repeating the install command. Do not add this browser installation to
+pre-commit or the standard validation workflow.
+
+Generating Mermaid source with `likec4 gen mermaid` also does not require
+Chromium. A browser is needed only if a separate renderer such as Mermaid CLI
+is later used to convert that source to PNG, JPEG, SVG, or PDF.
+
+This repository provides that separate renderer as a pinned, opt-in publication
+and validation layer. See
+[Mermaid Installation and Configuration](mermaid-installation-and-configuration.md).
+LikeC4 model files remain the source of truth for architecture; generated
+Mermaid files are publication artifacts.
+
 ## Add repository-local pre-commit validation
 
 Add the following hooks to `.pre-commit-config.yaml` in each repository that

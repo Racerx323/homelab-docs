@@ -1,0 +1,45 @@
+---
+name: Mermaid
+
+'on':
+  pull_request:
+    paths:
+      - '**/*.mermaid'
+      - '**/*.mmd'
+      - '.github/workflows/mermaid.yml'
+      - '.mermaid-version'
+      - 'scripts/mermaid-tool.sh'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.mermaid'
+      - '**/*.mmd'
+      - '.github/workflows/mermaid.yml'
+      - '.mermaid-version'
+      - 'scripts/mermaid-tool.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '26.4.0'
+
+      - name: Install pinned Mermaid CLI
+        shell: bash
+        run: |
+          MERMAID_VERSION="$(tr -d '[:space:]' < .mermaid-version)"
+          npm install --global --allow-scripts=puppeteer \
+            "@mermaid-js/mermaid-cli@${MERMAID_VERSION}"
+
+      - name: Validate Mermaid diagrams
+        run: scripts/mermaid-tool.sh validate

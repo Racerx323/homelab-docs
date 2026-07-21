@@ -3,7 +3,7 @@
 This document records the shared development and validation tools used across
 the homelab repositories. The primary workstation baseline is Ubuntu 24.04
 under WSL2, with PowerShell 7 installed in both Ubuntu and on the Windows host.
-Versions were last verified on July 20, 2026.
+Versions were last verified on July 21, 2026.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
@@ -116,9 +116,11 @@ Windows-specific tests from PowerShell 7 on the Windows host.
 | markdownlint-cli2 | 0.23.1 | Markdown style and consistency checks |
 | markdown-link-check | 3.14.2 | Checks links in Markdown documents |
 | yamllint | 1.33.0 | YAML syntax and style validation |
+| actionlint | 1.7.12 | Static analysis for GitHub Actions workflows |
 | check-jsonschema | 0.37.4 | Schema validation for Compose and GitHub issue YAML |
 | jq | 1.7.1 | JSON queries and syntax validation |
 | Mike Farah `yq` | 4.53.3 | Native YAML queries and edits using `yq eval` syntax |
+| Mermaid CLI (`mmdc`) | 11.16.0 | Validates Mermaid files and exports SVG, PNG, or PDF |
 
 Common direct checks include:
 
@@ -126,6 +128,7 @@ Common direct checks include:
 markdownlint-cli2 '**/*.md'
 markdown-link-check README.md
 yamllint --strict .
+actionlint
 check-jsonschema --builtin-schema vendor.compose-spec compose.yaml
 jq empty path/to/file.json
 yq eval '.services' compose.yaml
@@ -136,6 +139,15 @@ The active `yq` implementation must be Mike Farah v4. Confirm it with:
 ```bash
 yq --version
 ```
+
+The Mermaid CLI version is pinned in `.mermaid-version`. See
+[Mermaid Installation and Configuration](mermaid-installation-and-configuration.md)
+for the authoring, validation, export, editor, pre-commit, and CI workflow.
+
+actionlint complements yamllint with GitHub Actions-aware semantic, expression,
+action-input, reusable-workflow, and inline-script checks. See
+[actionlint Installation and Configuration](actionlint-installation-and-configuration.md)
+for installation, pre-commit integration, and upgrades.
 
 ## Security and container validation
 
@@ -206,6 +218,14 @@ LikeC4 is installed globally under the active NVM Node.js version. See
 [LikeC4 Installation and Configuration](likec4-installation-and-configuration.md)
 for the workstation, Codex, VS Code, repository, and CI setup.
 
+Playwright Chromium is intentionally excluded from the core tool inventory.
+It is an on-demand runtime used only when LikeC4 publishes PNG or JPEG exports;
+the standard formatting, validation, MCP, preview, build, JSON, and DrawIO
+workflows remain browser-free. The LikeC4 guide records the version-matched
+installation command and storage implications. Generating Mermaid source does
+not add a browser requirement unless a separate Mermaid renderer is used to
+produce image or PDF artifacts.
+
 Erode is installed for manual, advisory use. The current model validation has
 19 repository-linked components and 50 unlinked components, so Erode should not
 be promoted to a blocking check until the relevant mappings are complete.
@@ -262,6 +282,8 @@ Examples of the current installation channels are:
 pipx install check-jsonschema
 npm install --global markdownlint-cli2 markdown-link-check vexp-cli
 GOBIN="$HOME/.local/bin" go install github.com/mikefarah/yq/v4@latest
+GOBIN="$HOME/.local/bin" go install \
+    github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
 ```
 
 The current installation channels are:
@@ -270,9 +292,9 @@ The current installation channels are:
 | --- | --- |
 | Ubuntu APT packages | Git, GitHub CLI, pre-commit, ShellCheck, shfmt, Bats, yamllint, jq, Gitleaks, Podman, Skopeo |
 | Vendor APT repositories | PowerShell, Terraform, Trivy, Doppler |
-| Global npm under NVM | Copilot, LikeC4, Erode, vexp, markdownlint-cli2, markdown-link-check |
+| Global npm under NVM | Copilot, LikeC4, Mermaid CLI, Erode, vexp, markdownlint-cli2, markdown-link-check |
 | pipx | check-jsonschema |
-| Go build in `~/.local/bin` | Mike Farah yq v4 |
+| Go build in `~/.local/bin` | Mike Farah yq v4, actionlint |
 | User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs |
 | Snap | Ollama 0.24.0, published as `mz2` |
 
@@ -283,20 +305,21 @@ Python/jq-wrapper package named `yq`.
 
 All managed repositories use local pre-commit hooks for applicable files:
 ShellCheck, shfmt, markdownlint-cli2, yamllint, GitHub issue-form schemas,
-Compose schemas, JSON parsing with jq, and Gitleaks. A hook runs only when a
-repository contains a matching file type. Repository-specific coverage is:
+Compose schemas, JSON parsing with jq, and Gitleaks. Repositories containing
+GitHub Actions also run actionlint. A hook runs only when a repository contains
+a matching file type. Repository-specific coverage is:
 
 | Repository | Primary content | Additional tools and validation |
 | --- | --- | --- |
 | `bash-bcs-workspace` | Bash, Bats tests, Markdown, environment templates | BCS with Ollama; shfmt uses two-space indentation |
 | `frame-and-sample` | Markdown documentation and templates | Shared documentation, YAML, and secret checks |
-| `homelab-dns` | Bash, service configuration, Markdown | ShellCheck and shfmt for msmtp helpers |
-| `homelab-docs` | Markdown, GitHub YAML, and LikeC4 | Shared checks; LikeC4 formatting and validation; manual Erode drift analysis; owns this inventory |
+| `homelab-dns` | Bash, service configuration, Markdown | ShellCheck and shfmt for msmtp helpers; actionlint for architecture-drift workflow |
+| `homelab-docs` | Markdown, GitHub YAML, LikeC4, and Mermaid | Shared checks; LikeC4, Mermaid, and GitHub Actions validation; manual Erode drift analysis; owns this inventory |
 | `homelab-monitoring-observability` | Apache and Munin configuration documentation | Shared checks for applicable files |
 | `homelab-network` | Network documentation and repository scaffolding | Shared checks for applicable files |
 | `homelab-notification` | Bash, Podman Compose YAML, JSON examples, service configuration | Compose schema checks; manual Trivy scans of Apprise API and Mailrise images |
 | `homelab-ntp` | NTPsec documentation and configuration scaffolding | Shared checks for applicable files |
-| `homelab-scripts` | PowerShell, registry files, Task Scheduler XML, Markdown | Pester on Windows; GitHub Actions with Pester 5; shared checks for applicable WSL-side files |
+| `homelab-scripts` | PowerShell, registry files, Task Scheduler XML, Markdown | Pester on Windows; actionlint; GitHub Actions with Pester 5; shared checks for applicable WSL-side files |
 | `homelab-server-configs` | Webmin and watchdog configuration scaffolding | Shared checks for applicable files |
 | `homelab-terraform` | Terraform HCL and Markdown | Terraform, TFLint, terraform-docs, and Trivy configuration scanning |
 

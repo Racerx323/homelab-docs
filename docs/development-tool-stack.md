@@ -3,7 +3,9 @@
 This document records the shared development and validation tools used across
 the homelab repositories. The primary workstation baseline is Ubuntu 24.04
 under WSL2, with PowerShell 7 installed in both Ubuntu and on the Windows host.
-Versions were last verified on July 21, 2026.
+Core tool versions were last verified on July 21, 2026. Codex extensions,
+skills, MCP servers, and agent configuration were last verified on August 2,
+2026.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
@@ -215,7 +217,6 @@ before making infrastructure changes.
 | Ollama | 0.24.0; `qwen3.5:9b` | Local inference backend and model used by BCS |
 | vexp CLI | 2.2.3 | Indexed repository context and impact analysis |
 | LikeC4 CLI and MCP | 1.59.1 | Architecture-as-code modeling, validation, previews, and model queries |
-| LikeC4 DSL skill | Current global installation | LikeC4 syntax and workflow guidance for Codex |
 | Erode CLI | 0.9.4 | AI-assisted comparison of code changes with the LikeC4 model |
 
 LikeC4 is installed globally under the active NVM Node.js version. See
@@ -265,6 +266,95 @@ This avoids consuming review capacity during active draft work while keeping
 the organization configuration as the source for all other review behavior.
 Comment `@coderabbitai review` on a pull request to request an incremental
 review manually.
+
+## Codex extensions
+
+Codex loads reusable workflows from skills and plugins. A skill supplies
+instructions and supporting resources. An MCP server supplies tools, live
+data, or controlled actions. Plugins can package either or both. The tables
+below inventory active capabilities, not every package retained in a local
+download cache.
+
+Do not copy `~/.codex/config.toml`, MCP environment blocks, HTTP headers,
+connector identifiers, authentication state, or generated session files into
+this repository. Record capability names and purposes here; keep credentials
+in their owning credential store.
+
+### Installed plugins
+
+| Plugin | Version | Included capability |
+| --- | --- | --- |
+| Context7 | 1.0.1 | Current library and framework documentation through a skill and MCP server |
+| CodeRabbit | 1.1.4 | Code review skill backed by the CodeRabbit CLI and service |
+| Codex Security | 0.1.15 | Security workflow skills, scan tools, and result UI |
+| GitHub | 0.1.8 | GitHub repository, issue, pull request, review, and Actions workflows through the GitHub app and `gh` |
+
+Plugin builds can include a build suffix after the displayed version. Use the
+Codex plugin browser to inspect the exact installed build and to enable,
+disable, update, or remove a plugin.
+
+### Skills
+
+Codex may invoke a skill when a request matches its description. Invoke one
+explicitly with `$skill-name` when the workflow must be selected. The detailed
+trigger rules and procedures remain in each skill's `SKILL.md`.
+
+| Scope | Skills | Purpose |
+| --- | --- | --- |
+| Codex system | `imagegen`, `openai-docs`, `plugin-creator`, `skill-creator`, `skill-installer` | Image generation, authoritative OpenAI documentation, and creation or installation of Codex extensions |
+| Personal | `context7-mcp`, `likec4-dsl`, `playwright-cli`, `stop-slop` | Current technical documentation, LikeC4 DSL guidance, browser automation, and prose cleanup |
+| Context7 plugin | `context7:context7-mcp` | Documentation lookup workflow bundled with the Context7 MCP server |
+| CodeRabbit plugin | `coderabbit:code-review` | Review local or pull request changes and support fix-review cycles |
+| GitHub plugin | `github:github`, `github:gh-address-comments`, `github:gh-fix-ci`, `github:yeet` | GitHub orientation, review-comment fixes, Actions repair, and draft pull request publication |
+| Codex Security plugin | `codex-security:attack-path-analysis`, `codex-security:deep-security-scan`, `codex-security:define-security-policy`, `codex-security:finding-discovery`, `codex-security:fix-finding`, `codex-security:propose-security-hardening`, `codex-security:security-diff-scan`, `codex-security:security-scan`, `codex-security:threat-model`, `codex-security:track-findings`, `codex-security:triage-finding`, `codex-security:validation`, `codex-security:vulnerability-writeup` | Security policy, scanning, validation, remediation, tracking, threat modeling, and reporting workflows |
+
+The personal `context7-mcp` skill and the plugin-provided
+`context7:context7-mcp` skill implement the same workflow from different
+installation scopes. Prefer the plugin skill when its bundled MCP dependency
+is required.
+
+Personal standalone skills belong in `$HOME/.agents/skills`. Codex-managed
+system skills and compatibility data remain under `$HOME/.codex/skills`.
+
+### MCP servers
+
+| Server | Provisioning | Purpose |
+| --- | --- | --- |
+| vexp | Global Codex configuration; vexp CLI 2.2.3 | Local indexed repository context, impact analysis, and repository memory |
+| LikeC4 | Global Codex configuration; LikeC4 1.59.1 | Architecture model search, graph queries, semantic layout, and view or deployment inspection |
+| GitKraken | Global Codex configuration through GitLens | Git operations plus GitHub issue, pull request, workspace, and review workflows |
+| Playwright | Global Codex configuration; on-demand `@playwright/mcp` package | Browser inspection and automation |
+| Context7 | Context7 plugin and global remote-server registration | Current, version-specific library, framework, SDK, API, CLI, and cloud-service documentation |
+| Codex Security | Codex Security plugin | Long-running security scans, scan state, remediation handoff, and result inspection |
+
+Context7 exposes `resolve-library-id` and `query-docs`. Resolve a library name
+before querying its documentation unless the request already supplies an exact
+Context7 library ID. Both tools are read-only but send the documentation query
+to the Context7 service, so never include credentials, private source, personal
+data, or other confidential content in a query.
+
+vexp runs locally and indexes repositories under the development workspace.
+Playwright can interact with live web pages and GitKraken can mutate Git and
+GitHub state; review the requested scope before approving write operations.
+
+### Agents and persistent instructions
+
+| Agent or instruction scope | Configuration | Role |
+| --- | --- | --- |
+| Codex primary agent | Codex session | Performs the requested repository work under the active sandbox and approval policy |
+| Codex sub-agents | Created on demand within a Codex session | Handle explicitly delegated, bounded work in parallel; they share the workspace and do not represent persistent named agents |
+| Personal Codex instructions | `$HOME/.codex/AGENTS.md` | Apply personal defaults across workspaces |
+| Development-workspace instructions | `$HOME/code/AGENTS.md` | Apply shared development rules, including Context7, vexp, Podman, and shell-formatting policy |
+| Repository instructions | Repository or nested `AGENTS.md` files | Add repository-specific validation, review, and safety rules; the closest applicable file governs its subtree |
+| CodeRabbit | `.coderabbit.yaml` plus the CodeRabbit service | Reviews ready pull requests and skips drafts unless review is requested manually |
+| GitHub Actions | `.github/workflows/` | Runs baseline validation, LikeC4 and Mermaid checks, and repository-governance auditing |
+
+Files named `agents/openai.yaml` inside installed skills define display,
+invocation, policy, and tool-dependency metadata for those skills. They do not
+define additional autonomous agents. The repository `AGENTS.md` also describes
+Dependabot, Codecov, and a generic style-linter role, but this repository does
+not currently configure those three services; do not treat them as active
+agents until their configuration exists.
 
 ## Secrets and credentials
 

@@ -19,19 +19,37 @@ deployment {
       }
     }
 
-    dnsZone = zone "DNS High Availability" {
-      dnsNode1 = server "DNS Node 1" {
-        keepalived1 = instanceOf homelab.dnsPlatform.node1.keepalived
-        pihole1 = instanceOf homelab.dnsPlatform.node1.pihole
-        unbound1 = instanceOf homelab.dnsPlatform.node1.unbound
+    dnsZone = zone "Coupled DNS and Proxy High Availability" {
+      nodeA = server "Node A: j1-svpihole0" {
+        keepalived = instanceOf homelab.dnsPlatform.node1.keepalived
+        pihole = instanceOf homelab.dnsPlatform.node1.pihole
+        unbound = instanceOf homelab.dnsPlatform.node1.unbound
+        lighttpd = instanceOf homelab.dnsPlatform.node1.lighttpd
+        caddy = instanceOf homelab.dnsPlatform.node1.caddy
+        lsyncd = instanceOf homelab.dnsPlatform.node1.lsyncd
+        publisher = instanceOf homelab.dnsPlatform.node1.publisher
+        finalizer = instanceOf homelab.dnsPlatform.node1.finalizer
+        reconciler = instanceOf homelab.dnsPlatform.node1.reconciler
+        queue = instanceOf homelab.dnsPlatform.node1.notificationQueue
+        worker = instanceOf homelab.dnsPlatform.node1.notificationWorker
       }
-      dnsNode2 = server "DNS Node 2" {
-        keepalived2 = instanceOf homelab.dnsPlatform.node2.keepalived
-        pihole2 = instanceOf homelab.dnsPlatform.node2.pihole
-        unbound2 = instanceOf homelab.dnsPlatform.node2.unbound
+      nodeB = server "Node B: j1-svpihole00" {
+        keepalived = instanceOf homelab.dnsPlatform.node2.keepalived
+        pihole = instanceOf homelab.dnsPlatform.node2.pihole
+        unbound = instanceOf homelab.dnsPlatform.node2.unbound
+        lighttpd = instanceOf homelab.dnsPlatform.node2.lighttpd
+        caddy = instanceOf homelab.dnsPlatform.node2.caddy
+        lsyncd = instanceOf homelab.dnsPlatform.node2.lsyncd
+        publisher = instanceOf homelab.dnsPlatform.node2.publisher
+        finalizer = instanceOf homelab.dnsPlatform.node2.finalizer
+        reconciler = instanceOf homelab.dnsPlatform.node2.reconciler
+        queue = instanceOf homelab.dnsPlatform.node2.notificationQueue
+        worker = instanceOf homelab.dnsPlatform.node2.notificationWorker
       }
-      dnsVip = appliance "DNS Virtual Address" {
-        virtualIp = instanceOf homelab.dnsPlatform.virtualIp
+      coupledVips = appliance "PIHOLE_DUALSTACK shared VIPs" {
+        group = instanceOf homelab.dnsPlatform.ownershipGroup
+        dnsVips = instanceOf homelab.dnsPlatform.virtualIp
+        proxyVips = instanceOf homelab.dnsPlatform.proxyVirtualIp
       }
     }
 
@@ -61,6 +79,18 @@ deployment {
         terraform = instanceOf homelab.automation.terraform
         serverConfiguration = instanceOf homelab.automation.serverConfiguration
         windowsWslScripts = instanceOf homelab.automation.windowsWslScripts
+      }
+    }
+
+    externalZone = zone "External Dependencies" {
+      dnsUpstream = appliance "Cloudflare DNS-over-TLS" {
+        resolver = instanceOf cloudflareDns
+      }
+      secretStore = appliance "Doppler TLS source" {
+        tls = instanceOf homelab.dnsPlatform.tlsMaterial
+      }
+      deliveryProviders = appliance "Notification Providers" {
+        providers = instanceOf notificationProviders
       }
     }
   }

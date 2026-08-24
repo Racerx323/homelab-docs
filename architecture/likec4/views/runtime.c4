@@ -14,17 +14,26 @@ views "Runtime Architecture" {
   }
 
   view dns-ha of homelab.dnsPlatform {
-    title "Highly Available DNS"
+    title "Coupled DNS and Proxy High Availability"
     include *
     include homelab.dnsPlatform.**
-    include clientDevices, cloudflareDns, rootDns, homelab.networkPlatform.gateway, homelab.automation.nebulaSync
+    include clientDevices, cloudflareDns, rootDns, homelab.networkPlatform.gateway, homelab.notificationPlatform.appriseApi
+    autoLayout LeftRight
+  }
+
+  view reverse-proxy-ha of homelab.dnsPlatform {
+    title "Caddy and DNS HA: Accepted Steady State"
+    description "Node A is preferred MASTER with all four VIPs; Node B is BACKUP with zero VIPs. One PIHOLE_DUALSTACK group owns DNS and Proxy together."
+    include homelab.dnsPlatform.ownershipGroup, homelab.dnsPlatform.virtualIp, homelab.dnsPlatform.proxyVirtualIp, homelab.dnsPlatform.tlsMaterial, homelab.dnsPlatform.immutableRelease
+    include homelab.dnsPlatform.node1.*, homelab.dnsPlatform.node2.*
+    include clientDevices, cloudflareDns, homelab.notificationPlatform.appriseApi, notificationProviders
     autoLayout LeftRight
   }
 
   view notification-platform of homelab.notificationPlatform {
     title "Notification Platform"
     include *
-    include notificationProviders, operator, homelab.automation.windowsWslScripts
+    include notificationProviders, operator, homelab.dnsPlatform.node1.notificationWorker, homelab.dnsPlatform.node2.notificationWorker
     autoLayout LeftRight
   }
 
@@ -46,6 +55,15 @@ views "Runtime Architecture" {
     title "Homelab Deployment"
     include production.**
     style production.* { color muted }
+    autoLayout LeftRight
+  }
+
+  deployment view reverse-proxy-deployment {
+    title "Coupled DNS and Proxy HA Deployment"
+    include production.dnsZone.**
+    include production.servicesZone.notificationHost.appriseApi
+    include production.externalZone.**
+    style production.dnsZone.* { color muted }
     autoLayout LeftRight
   }
 }

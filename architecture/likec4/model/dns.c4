@@ -1,38 +1,186 @@
 model {
   extend homelab {
-    dnsPlatform = system "Highly Available DNS" {
+    dnsPlatform = system "Coupled DNS and Proxy HA" {
       #runtime
-      description "A virtual DNS endpoint backed by two Pi-hole v5, Unbound 1.25.1, and Keepalived nodes."
-      metadata { repository "homelab-dns" }
-      link https://github.com/Racerx323/homelab-dns "Source repository"
+      description "The accepted two-node Pi-hole v5, Unbound, Caddy, and Keepalived platform. One PIHOLE_DUALSTACK group moves both DNS VIPs and both Proxy VIPs together."
+      metadata {
+        dnsRepository "homelab-dns"
+        proxyRepository "homelab-server-configs"
+      }
+      link https://github.com/Racerx323/homelab-dns "DNS and Keepalived source"
+      link https://github.com/Racerx323/homelab-server-configs "Caddy and synchronization source"
 
-      virtualIp = service "DNS Virtual IP" {
-        description "Floating client-facing DNS address managed by Keepalived."
+      ownershipGroup = service "PIHOLE_DUALSTACK" {
+        description "One Keepalived sync group controlling the DNS and Proxy IPv4 and IPv6 VIPs as a coupled ownership unit."
       }
-      node1 = system "DNS Node 1 (Primary)" {
-        keepalived = service "Keepalived 1"
-        pihole = service "Pi-hole v5 on pihole0"
-        unbound = service "Unbound 1.25.1 on pihole0"
+      virtualIp = service "DNS VIPs .55 and ::55" {
+        description "10.1.0.55 and fd36:5aa8:6971:1::55."
       }
-      node2 = system "DNS Node 2 (Backup)" {
-        keepalived = service "Keepalived 2"
-        pihole = service "Pi-hole v5 on pihole00"
-        unbound = service "Unbound 1.25.1 on pihole00"
+      proxyVirtualIp = service "Proxy VIPs .56 and ::56" {
+        description "10.1.0.56 and fd36:5aa8:6971:1::56 for proxy.local.theama.co and pihole-admin.local.theama.co."
+      }
+      tlsMaterial = datastore "External TLS material" {
+        description "Certificate, private key, and CA bundle supplied from Doppler; secret bytes are not stored in the repositories."
+        metadata { owner "external-secret" }
+      }
+      immutableRelease = artifact "Reviewed protocol-v2 release" {
+        description "Manifest-verified immutable Caddy configuration and TLS payload selected through /etc/caddy/current."
+        metadata { owner "homelab-server-configs" }
+      }
+
+      node1 = system "Node A: j1-svpihole0 (preferred)" {
+        description "Preferred owner. Accepted steady state is MASTER for both families with all four shared VIPs."
+        keepalived = service "Keepalived 2.2.7"
+        eligibility = service "Coupled serving eligibility"
+        dnsHealthProbe = service "DNS tracking probe"
+        caddyHealthProbe = service "Caddy HTTPS tracking probe"
+        pihole = service "Pi-hole FTL v5.25.2" {
+          metadata { owner "Pi-hole application" }
+        }
+        unbound = service "Unbound 1.17.1" {
+          metadata { owner "homelab-dns" }
+        }
+        lighttpd = service "lighttpd 1.4.69" {
+          metadata { owner "Debian package plus accepted transformation" }
+        }
+        caddy = service "Caddy 2.11.4" {
+          metadata { owner "homelab-server-configs" }
+        }
+        webHealthMonitor = service "Pi-hole web monitor" {
+          description "Notification-only node-local Caddy/lighttpd check; it does not affect VRRP eligibility."
+        }
+        publisher = service "Protocol-v2 publisher" {
+          description "Normal publication source for reviewed immutable releases."
+        }
+        outbound = datastore "Protocol-v2 outbound"
+        incoming = datastore "Protocol-v2 incoming"
+        lsyncd = service "Managed lsyncd 2.2.3"
+        finalizer = service "Protocol-v2 finalizer"
+        reconciler = service "Release reconciler"
+        releaseStore = datastore "Immutable release store"
+        notificationQueue = datastore "Persistent notification queue" {
+          description "Atomic pending, inflight, receipt, and dead-letter state under /var/lib."
+        }
+        notificationWorker = service "Durable Apprise worker"
+      }
+
+      node2 = system "Node B: j1-svpihole00 (standby)" {
+        description "Standby owner. Accepted steady state is BACKUP for both families with zero shared VIPs."
+        keepalived = service "Keepalived 2.2.7"
+        eligibility = service "Coupled serving eligibility"
+        dnsHealthProbe = service "DNS tracking probe"
+        caddyHealthProbe = service "Caddy HTTPS tracking probe"
+        pihole = service "Pi-hole FTL v5.25.2" {
+          metadata { owner "Pi-hole application" }
+        }
+        unbound = service "Unbound 1.17.1" {
+          metadata { owner "homelab-dns" }
+        }
+        lighttpd = service "lighttpd 1.4.69" {
+          metadata { owner "Debian package plus accepted transformation" }
+        }
+        caddy = service "Caddy 2.11.4" {
+          metadata { owner "homelab-server-configs" }
+        }
+        webHealthMonitor = service "Pi-hole web monitor" {
+          description "Notification-only node-local Caddy/lighttpd check; it does not affect VRRP eligibility."
+        }
+        publisher = service "Guarded emergency publisher" {
+          description "Usable only while Node B is MASTER for both families and owns all four VIPs."
+        }
+        outbound = datastore "Protocol-v2 outbound"
+        incoming = datastore "Protocol-v2 incoming"
+        lsyncd = service "Managed lsyncd 2.2.3"
+        finalizer = service "Protocol-v2 finalizer"
+        reconciler = service "Release reconciler"
+        releaseStore = datastore "Immutable release store"
+        notificationQueue = datastore "Persistent notification queue" {
+          description "Atomic pending, inflight, receipt, and dead-letter state under /var/lib."
+        }
+        notificationWorker = service "Durable Apprise worker"
       }
     }
   }
 
-  homelab.networkPlatform.gateway -[routes]-> homelab.dnsPlatform.virtualIp "DHCP advertises DNS VIP"
-  clientDevices -[queries]-> homelab.dnsPlatform.virtualIp "DNS/53"
-  homelab.dnsPlatform.virtualIp -[routes]-> homelab.dnsPlatform.node1.pihole "active primary"
-  homelab.dnsPlatform.virtualIp -[routes]-> homelab.dnsPlatform.node2.pihole "failover backup"
-  homelab.dnsPlatform.node1.keepalived -[synchronizes]-> homelab.dnsPlatform.node2.keepalived "VRRP heartbeat"
-  homelab.dnsPlatform.node1.keepalived -[manages]-> homelab.dnsPlatform.virtualIp "owns while primary"
-  homelab.dnsPlatform.node2.keepalived -[manages]-> homelab.dnsPlatform.virtualIp "claims on failover"
+  homelab.networkPlatform.gateway -[routes]-> homelab.dnsPlatform.virtualIp "DHCP advertises DNS VIPs"
+  clientDevices -[queries]-> homelab.dnsPlatform.virtualIp "DNS over IPv4 and IPv6 port 53"
+  clientDevices -[connects]-> homelab.dnsPlatform.proxyVirtualIp "trusted HTTP/HTTPS over IPv4 and IPv6"
+
+  homelab.dnsPlatform.ownershipGroup -[manages]-> homelab.dnsPlatform.virtualIp "coupled ownership"
+  homelab.dnsPlatform.ownershipGroup -[manages]-> homelab.dnsPlatform.proxyVirtualIp "coupled ownership"
+  homelab.dnsPlatform.node1.keepalived -[synchronizes]-> homelab.dnsPlatform.node2.keepalived "VRRP advertisements"
+  homelab.dnsPlatform.node1.keepalived -[manages]-> homelab.dnsPlatform.ownershipGroup "preferred owner"
+  homelab.dnsPlatform.node2.keepalived -[manages]-> homelab.dnsPlatform.ownershipGroup "standby and failover owner"
+  homelab.dnsPlatform.virtualIp -[routes]-> homelab.dnsPlatform.node1.pihole "when Node A owns PIHOLE_DUALSTACK"
+  homelab.dnsPlatform.virtualIp -[routes]-> homelab.dnsPlatform.node2.pihole "when Node B owns PIHOLE_DUALSTACK"
+  homelab.dnsPlatform.proxyVirtualIp -[routes]-> homelab.dnsPlatform.node1.caddy "when Node A owns PIHOLE_DUALSTACK"
+  homelab.dnsPlatform.proxyVirtualIp -[routes]-> homelab.dnsPlatform.node2.caddy "when Node B owns PIHOLE_DUALSTACK"
+
   homelab.dnsPlatform.node1.pihole -[resolves]-> homelab.dnsPlatform.node1.unbound "127.0.0.1:5335"
   homelab.dnsPlatform.node2.pihole -[resolves]-> homelab.dnsPlatform.node2.unbound "127.0.0.1:5335"
   homelab.dnsPlatform.node1.unbound -[resolves]-> cloudflareDns "DNS-over-TLS/853"
   homelab.dnsPlatform.node2.unbound -[resolves]-> cloudflareDns "DNS-over-TLS/853"
   homelab.dnsPlatform.node1.unbound -[resolves]-> rootDns "forward-first fallback DNS/53"
   homelab.dnsPlatform.node2.unbound -[resolves]-> rootDns "forward-first fallback DNS/53"
+  homelab.dnsPlatform.node1.caddy -[routes]-> homelab.dnsPlatform.node1.lighttpd "127.0.0.1:8080"
+  homelab.dnsPlatform.node2.caddy -[routes]-> homelab.dnsPlatform.node2.lighttpd "127.0.0.1:8080"
+  homelab.dnsPlatform.node1.caddy -[uses]-> homelab.dnsPlatform.tlsMaterial "trusted HTTPS"
+  homelab.dnsPlatform.node2.caddy -[uses]-> homelab.dnsPlatform.tlsMaterial "trusted HTTPS"
+
+  homelab.dnsPlatform.node1.dnsHealthProbe -[monitors]-> homelab.dnsPlatform.node1.pihole "Pi-hole and Unbound serving path"
+  homelab.dnsPlatform.node1.caddyHealthProbe -[monitors]-> homelab.dnsPlatform.node1.caddy "trusted node-local /healthz"
+  homelab.dnsPlatform.node1.dnsHealthProbe -[alerts]-> homelab.dnsPlatform.node1.eligibility "exit status"
+  homelab.dnsPlatform.node1.caddyHealthProbe -[alerts]-> homelab.dnsPlatform.node1.eligibility "exit status"
+  homelab.dnsPlatform.node1.eligibility -[manages]-> homelab.dnsPlatform.node1.keepalived "coupled eligibility"
+  homelab.dnsPlatform.node2.dnsHealthProbe -[monitors]-> homelab.dnsPlatform.node2.pihole "Pi-hole and Unbound serving path"
+  homelab.dnsPlatform.node2.caddyHealthProbe -[monitors]-> homelab.dnsPlatform.node2.caddy "trusted node-local /healthz"
+  homelab.dnsPlatform.node2.dnsHealthProbe -[alerts]-> homelab.dnsPlatform.node2.eligibility "exit status"
+  homelab.dnsPlatform.node2.caddyHealthProbe -[alerts]-> homelab.dnsPlatform.node2.eligibility "exit status"
+  homelab.dnsPlatform.node2.eligibility -[manages]-> homelab.dnsPlatform.node2.keepalived "coupled eligibility"
+  homelab.dnsPlatform.node1.webHealthMonitor -[monitors]-> homelab.dnsPlatform.node1.lighttpd "notification only"
+  homelab.dnsPlatform.node2.webHealthMonitor -[monitors]-> homelab.dnsPlatform.node2.lighttpd "notification only"
+
+  operator -[configures]-> homelab.dnsPlatform.node1.publisher "authorizes normal publication"
+  operator -[configures]-> homelab.dnsPlatform.node2.publisher "authorizes guarded emergency publication"
+  homelab.dnsPlatform.node1.publisher -[builds]-> homelab.dnsPlatform.node1.outbound "publish immutable candidate"
+  homelab.dnsPlatform.node1.lsyncd -[synchronizes]-> homelab.dnsPlatform.node2.incoming "forced-command transfer"
+  homelab.dnsPlatform.node2.finalizer -[verifies]-> homelab.dnsPlatform.node2.incoming "manifest, identity, modes, TLS, and Caddy"
+  homelab.dnsPlatform.node2.finalizer -[alerts]-> homelab.dnsPlatform.node2.reconciler "completion trigger"
+  homelab.dnsPlatform.node2.reconciler -[installs]-> homelab.dnsPlatform.node2.releaseStore "stage and select one valid release"
+  homelab.dnsPlatform.node2.reconciler -[configures]-> homelab.dnsPlatform.node2.caddy "reload after validation"
+  homelab.dnsPlatform.node2.publisher -[builds]-> homelab.dnsPlatform.node2.outbound "emergency candidate"
+  homelab.dnsPlatform.node2.lsyncd -[synchronizes]-> homelab.dnsPlatform.node1.incoming "guarded reverse transfer"
+  homelab.dnsPlatform.node1.finalizer -[verifies]-> homelab.dnsPlatform.node1.incoming "manifest, identity, modes, TLS, and Caddy"
+  homelab.dnsPlatform.node1.finalizer -[alerts]-> homelab.dnsPlatform.node1.reconciler "completion trigger"
+  homelab.dnsPlatform.node1.reconciler -[installs]-> homelab.dnsPlatform.node1.releaseStore "stage and select one valid release"
+  homelab.dnsPlatform.node1.reconciler -[configures]-> homelab.dnsPlatform.node1.caddy "reload after validation"
+  homelab.dnsPlatform.immutableRelease -[installs]-> homelab.dnsPlatform.node1.releaseStore
+  homelab.dnsPlatform.immutableRelease -[installs]-> homelab.dnsPlatform.node2.releaseStore
+
+  homelab.dnsPlatform.node1.keepalived -[notifies]-> homelab.dnsPlatform.node1.notificationQueue "ownership transitions"
+  homelab.dnsPlatform.node1.webHealthMonitor -[notifies]-> homelab.dnsPlatform.node1.notificationQueue "web failure and recovery"
+  homelab.dnsPlatform.node1.lsyncd -[notifies]-> homelab.dnsPlatform.node1.notificationQueue "synchronization failure"
+  homelab.dnsPlatform.node1.reconciler -[notifies]-> homelab.dnsPlatform.node1.notificationQueue "reconciliation failure"
+  homelab.dnsPlatform.node1.notificationQueue -[routes]-> homelab.dnsPlatform.node1.notificationWorker "path and timer activation"
+  homelab.dnsPlatform.node1.notificationWorker -[notifies]-> homelab.notificationPlatform.appriseApi "bounded at-least-once delivery"
+  homelab.dnsPlatform.node2.keepalived -[notifies]-> homelab.dnsPlatform.node2.notificationQueue "ownership transitions"
+  homelab.dnsPlatform.node2.webHealthMonitor -[notifies]-> homelab.dnsPlatform.node2.notificationQueue "web failure and recovery"
+  homelab.dnsPlatform.node2.lsyncd -[notifies]-> homelab.dnsPlatform.node2.notificationQueue "synchronization failure"
+  homelab.dnsPlatform.node2.reconciler -[notifies]-> homelab.dnsPlatform.node2.notificationQueue "reconciliation failure"
+  homelab.dnsPlatform.node2.notificationQueue -[routes]-> homelab.dnsPlatform.node2.notificationWorker "path and timer activation"
+  homelab.dnsPlatform.node2.notificationWorker -[notifies]-> homelab.notificationPlatform.appriseApi "bounded at-least-once delivery"
+
+  portfolio.dnsRepo -[configures]-> homelab.dnsPlatform.node1.keepalived "Keepalived and DNS sources"
+  portfolio.dnsRepo -[configures]-> homelab.dnsPlatform.node2.keepalived "Keepalived and DNS sources"
+  portfolio.dnsRepo -[configures]-> homelab.dnsPlatform.node1.unbound "resolver and local-zone sources"
+  portfolio.dnsRepo -[configures]-> homelab.dnsPlatform.node2.unbound "resolver and local-zone sources"
+  portfolio.serverConfigsRepo -[configures]-> homelab.dnsPlatform.node1.caddy "Caddy, synchronization, and notification client"
+  portfolio.serverConfigsRepo -[configures]-> homelab.dnsPlatform.node2.caddy "Caddy, synchronization, and notification client"
+  portfolio.serverConfigsRepo -[configures]-> homelab.dnsPlatform.node1.lsyncd "managed protocol-v2 transport"
+  portfolio.serverConfigsRepo -[configures]-> homelab.dnsPlatform.node2.lsyncd "managed protocol-v2 transport"
+  portfolio.serverConfigsRepo -[configures]-> homelab.dnsPlatform.node1.reconciler "immutable release control-plane"
+  portfolio.serverConfigsRepo -[configures]-> homelab.dnsPlatform.node2.reconciler "immutable release control-plane"
+  portfolio.serverConfigsRepo -[configures]-> homelab.dnsPlatform.node1.notificationWorker "durable delivery client"
+  portfolio.serverConfigsRepo -[configures]-> homelab.dnsPlatform.node2.notificationWorker "durable delivery client"
+  portfolio.networkRepo -[configures]-> homelab.dnsPlatform.ownershipGroup "routing and firewall policy"
 }

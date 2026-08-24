@@ -39,7 +39,7 @@ model {
     }
     serverConfigsRepo = repository "homelab-server-configs" {
       #repository #homelab
-      description "Server configuration, Docker Compose workloads, and infrastructure automation."
+      description "Server configuration, Podman Compose workloads, and infrastructure automation."
       link https://github.com/Racerx323/homelab-server-configs "GitHub"
     }
     terraformRepo = repository "homelab-terraform" {

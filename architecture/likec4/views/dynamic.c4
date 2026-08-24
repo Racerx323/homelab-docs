@@ -4,7 +4,7 @@ views "Operational Flows" {
     variant sequence
 
     clientDevices -> homelab.dnsPlatform.virtualIp "query DNS/53"
-    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "route to active node"
+    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "route to current coupled owner"
     homelab.dnsPlatform.node1.pihole -> homelab.dnsPlatform.node1.unbound "resolve via 127.0.0.1:5335"
     homelab.dnsPlatform.node1.unbound -> cloudflareDns "forward over DNS-over-TLS/853"
     homelab.dnsPlatform.node1.unbound <- cloudflareDns "validated DNS answer"
@@ -14,39 +14,69 @@ views "Operational Flows" {
   }
 
   dynamic view dns-ha-upgrade {
-    title "Rolling Unbound Upgrade on HA DNS Nodes"
+    title "Standby-first Unbound Maintenance"
     variant sequence
 
-    operator -> homelab.dnsPlatform.node2.unbound "verify and install signed 1.25.1 package"
+    operator -> homelab.dnsPlatform.node2.unbound "validate and update standby"
     homelab.dnsPlatform.node2.pihole -> homelab.dnsPlatform.node2.unbound "validate local DNS/5335"
     homelab.dnsPlatform.node2.pihole <- homelab.dnsPlatform.node2.unbound "healthy DNS response"
-    operator -> homelab.dnsPlatform.virtualIp "fail over VIP to pihole00"
-    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node2.pihole "serve validation traffic"
-    operator -> homelab.dnsPlatform.node1.unbound "verify and install signed 1.25.1 package"
+    operator -> homelab.dnsPlatform.ownershipGroup "authorize coupled failover"
+    homelab.dnsPlatform.ownershipGroup -> homelab.dnsPlatform.node2.keepalived "Node B owns all four VIPs"
+    operator -> homelab.dnsPlatform.node1.unbound "validate and update preferred node"
     homelab.dnsPlatform.node1.pihole -> homelab.dnsPlatform.node1.unbound "validate local DNS/5335"
     homelab.dnsPlatform.node1.pihole <- homelab.dnsPlatform.node1.unbound "healthy DNS response"
-    operator -> homelab.dnsPlatform.virtualIp "restore preferred owner pihole0"
-    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "serve production traffic"
+    operator -> homelab.dnsPlatform.ownershipGroup "restore preferred ownership"
+    homelab.dnsPlatform.ownershipGroup -> homelab.dnsPlatform.node1.keepalived "Node A owns all four VIPs"
   }
 
   dynamic view dns-failover {
-    title "DNS VRRP Primary Healthy"
+    title "PIHOLE_DUALSTACK Accepted Steady State"
     variant sequence
 
     homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.node2.keepalived "VRRP advertisements"
-    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.virtualIp "retains VIP while primary is healthy"
-    clientDevices -> homelab.dnsPlatform.virtualIp "DNS query"
-    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node1.pihole "serve on primary"
+    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.ownershipGroup "MASTER for IPv4 and IPv6"
+    homelab.dnsPlatform.ownershipGroup -> homelab.dnsPlatform.virtualIp "own DNS .55 and ::55"
+    homelab.dnsPlatform.ownershipGroup -> homelab.dnsPlatform.proxyVirtualIp "own Proxy .56 and ::56"
   }
 
-  dynamic view dns-failover-primary-failure {
-    title "DNS VRRP Primary Failure"
+  dynamic view reverse-proxy-failover {
+    title "Coupled Caddy or DNS Failure and Preferred-owner Recovery"
     variant sequence
 
-    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.node2.keepalived "VRRP advertisements stop"
-    homelab.dnsPlatform.node2.keepalived -> homelab.dnsPlatform.virtualIp "claims VIP after primary failure"
-    clientDevices -> homelab.dnsPlatform.virtualIp "DNS query"
-    homelab.dnsPlatform.virtualIp -> homelab.dnsPlatform.node2.pihole "serve on backup"
+    homelab.dnsPlatform.node1.eligibility -> homelab.dnsPlatform.node1.keepalived "Caddy or DNS failure threshold reached"
+    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.ownershipGroup "withdraw all four VIPs"
+    homelab.dnsPlatform.node2.keepalived -> homelab.dnsPlatform.ownershipGroup "converge BACKUP to MASTER"
+    homelab.dnsPlatform.ownershipGroup -> homelab.dnsPlatform.virtualIp "serve DNS from Node B"
+    homelab.dnsPlatform.ownershipGroup -> homelab.dnsPlatform.proxyVirtualIp "serve Proxy from Node B"
+    clientDevices -> homelab.dnsPlatform.virtualIp "continuous dual-stack DNS"
+    clientDevices -> homelab.dnsPlatform.proxyVirtualIp "continuous trusted HTTPS"
+    homelab.dnsPlatform.node1.eligibility -> homelab.dnsPlatform.node1.keepalived "repeated healthy results"
+    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.ownershipGroup "recover preferred MASTER ownership"
+    homelab.dnsPlatform.node2.keepalived -> homelab.dnsPlatform.ownershipGroup "return to BACKUP with zero VIPs"
+  }
+
+  dynamic view protocol-v2-publication {
+    title "Normal Protocol-v2 Caddy Publication"
+    variant sequence
+
+    operator -> homelab.dnsPlatform.node1.publisher "authorize reviewed publication"
+    homelab.dnsPlatform.node1.publisher -> homelab.dnsPlatform.node1.outbound "publish immutable revision atomically"
+    homelab.dnsPlatform.node1.lsyncd -> homelab.dnsPlatform.node2.incoming "forced-command transfer without remote delete"
+    homelab.dnsPlatform.node2.finalizer -> homelab.dnsPlatform.node2.incoming "validate manifest, identity, modes, TLS, and Caddy"
+    homelab.dnsPlatform.node2.finalizer -> homelab.dnsPlatform.node2.reconciler "create completion and reconciliation trigger"
+    homelab.dnsPlatform.node2.reconciler -> homelab.dnsPlatform.node2.releaseStore "stage and atomically select release"
+    homelab.dnsPlatform.node2.reconciler -> homelab.dnsPlatform.node2.caddy "reload only after validation"
+  }
+
+  dynamic view notification-flow {
+    title "Durable Caddy and DNS Notification Delivery"
+    variant sequence
+
+    homelab.dnsPlatform.node1.keepalived -> homelab.dnsPlatform.node1.notificationQueue "atomically enqueue transition"
+    homelab.dnsPlatform.node1.notificationQueue -> homelab.dnsPlatform.node1.notificationWorker "activate by path or persistent timer"
+    homelab.dnsPlatform.node1.notificationWorker -> homelab.notificationPlatform.appriseApi "bounded at-least-once delivery"
+    homelab.notificationPlatform.appriseApi -> notificationProviders "fan out to configured providers"
+    notificationProviders -> operator "deliver structured notification"
   }
 
   dynamic view alert-delivery {

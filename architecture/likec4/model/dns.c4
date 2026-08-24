@@ -17,7 +17,7 @@ model {
         description "10.1.0.55 and fd36:5aa8:6971:1::55."
       }
       proxyVirtualIp = service "Proxy VIPs .56 and ::56" {
-        description "10.1.0.56 and fd36:5aa8:6971:1::56 for proxy.local.theama.co and pihole-admin.local.theama.co."
+        description "10.1.0.56 and fd36:5aa8:6971:1::56. Application A and AAAA records share these addresses. Both addresses use proxy.local.theama.co as their sole canonical PTR; Caddy selects applications through TLS SNI and the HTTP Host header."
       }
       tlsMaterial = datastore "External TLS material" {
         description "Certificate, private key, and CA bundle supplied from Doppler; secret bytes are not stored in the repositories."

@@ -5,7 +5,7 @@ the homelab repositories. The primary workstation baseline is Ubuntu 24.04
 under WSL2, with PowerShell 7 installed in both Ubuntu and on the Windows host.
 Core tool versions were last verified on July 21, 2026. Codex extensions,
 skills, MCP servers, and agent configuration were last verified on August 2,
-2026.
+2026. Ansible Core was added and verified on August 25, 2026.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
@@ -206,6 +206,35 @@ pre-commit run --all-files
 Do not run `terraform apply` as part of routine validation. Review a saved plan
 before making infrastructure changes.
 
+## Configuration management and orchestration
+
+| Tool | Version | Purpose |
+| --- | --- | --- |
+| Ansible Core | 2.21.3 | Validates and runs reviewed host-configuration and orchestration playbooks |
+
+Install the minimal controller with pipx. Repository playbooks use only
+`ansible.builtin` modules, so Ansible Core supplies the required commands:
+
+```bash
+pipx install ansible-core==2.21.3
+ansible-playbook --version
+```
+
+Run repository-specific syntax checks from the owning repository. For the
+Nautobot host-qualification playbook:
+
+```bash
+cd /home/aaron/code/homelab-server-configs
+ansible-playbook --syntax-check \
+    -i inventory/prod/hosts.yaml \
+    Nautobot/ansible/playbooks/qualify-host.yaml
+```
+
+The syntax check parses the inventory and playbook without contacting a managed
+host. A check-mode or live playbook invocation can still execute read-only
+commands and requires the owning repository's reviewed command and
+authorization boundary.
+
 ## AI-assisted development
 
 | Tool | Version or model | Purpose |
@@ -380,7 +409,7 @@ verification, rotation, and revocation procedures.
 | Tool | Version | Current use |
 | --- | --- | --- |
 | Python | 3.12.3 | pre-commit, yamllint, and Python-based CLI tooling |
-| pipx | 1.4.3 | Isolated installation of check-jsonschema |
+| pipx | 1.4.3 | Isolated installation of check-jsonschema and Ansible Core |
 | Node.js | 26.4.0 | Markdown and AI CLI tools |
 | npm | 12.0.1 | User-level global Node package installation |
 | Go | 1.26.4 | User-level installation of Go CLIs such as `yq` |
@@ -393,6 +422,7 @@ Examples of the current installation channels are:
 
 ```bash
 pipx install check-jsonschema
+pipx install ansible-core==2.21.3
 npm install --global markdownlint-cli2 markdown-link-check vexp-cli
 GOBIN="$HOME/.local/bin" go install github.com/mikefarah/yq/v4@latest
 GOBIN="$HOME/.local/bin" go install \
@@ -406,7 +436,7 @@ The current installation channels are:
 | Ubuntu APT packages | Git, GitHub CLI, pre-commit, ShellCheck, shfmt, Bats, yamllint, jq, Gitleaks, Podman, Skopeo |
 | Vendor APT repositories | PowerShell, Terraform, Trivy, Doppler |
 | Global npm under NVM | Copilot, LikeC4, Mermaid CLI, Erode, vexp, markdownlint-cli2, markdown-link-check |
-| pipx | check-jsonschema |
+| pipx | check-jsonschema, Ansible Core |
 | Go build in `~/.local/bin` | Mike Farah yq v4, actionlint |
 | User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs |
 | Snap | Ollama 0.24.0, published as `mz2` |
@@ -434,7 +464,7 @@ is:
 | `homelab-notification` | Bash, Podman Compose YAML, JSON examples, service configuration | Compose schema checks; scheduled and manual Trivy image scans |
 | `homelab-ntp` | NTPsec documentation and configuration scaffolding | Shared checks for applicable files |
 | `homelab-scripts` | PowerShell, registry files, Task Scheduler XML, Markdown | Pester 5 on Windows plus baseline validation |
-| `homelab-server-configs` | Webmin and watchdog configuration scaffolding | Shared checks for applicable files |
+| `homelab-server-configs` | Server configuration, inventory, and Nautobot automation | Shared checks; Nautobot desired-state schema and Ansible syntax validation |
 | `homelab-terraform` | Terraform HCL and Markdown | Terraform, TFLint, terraform-docs, and Trivy CI |
 
 The PowerShell workflow is intentionally path-filtered to the two Windows tool

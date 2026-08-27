@@ -5,7 +5,8 @@ the homelab repositories. The primary workstation baseline is Ubuntu 24.04
 under WSL2, with PowerShell 7 installed in both Ubuntu and on the Windows host.
 Core tool versions were last verified on July 21, 2026. Codex extensions,
 skills, MCP servers, and agent configuration were last verified on August 2,
-2026. Ansible Core was added and verified on August 25, 2026.
+2026. Ansible Core was added and verified on August 25, 2026. Playwright CLI
+and its Chromium runtime were verified on August 27, 2026.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
@@ -247,18 +248,33 @@ authorization boundary.
 | vexp CLI | 2.2.3 | Indexed repository context and impact analysis |
 | LikeC4 CLI and MCP | 1.59.1 | Architecture-as-code modeling, validation, previews, and model queries |
 | Erode CLI | 0.9.4 | AI-assisted comparison of code changes with the LikeC4 model |
+| Playwright CLI | 0.1.18 | Browser inspection and automation for agent-assisted workflows |
+| Playwright Chromium | Runtime 1237; Chrome for Testing 152.0.7977.8 | Version-matched browser used by Playwright CLI |
 
 LikeC4 is installed globally under the active NVM Node.js version. See
 [LikeC4 Installation and Configuration](likec4-installation-and-configuration.md)
 for the workstation, Codex, VS Code, repository, and CI setup.
 
-Playwright Chromium is intentionally excluded from the core tool inventory.
-It is an on-demand runtime used only when LikeC4 publishes PNG or JPEG exports;
-the standard formatting, validation, MCP, preview, build, JSON, and DrawIO
-workflows remain browser-free. The LikeC4 guide records the version-matched
-installation command and storage implications. Generating Mermaid source does
-not add a browser requirement unless a separate Mermaid renderer is used to
-produce image or PDF artifacts.
+Playwright CLI and its Chromium runtime are part of the development-tool
+baseline for browser inspection and automation. The npm package and browser
+runtime are separate installations. A Playwright CLI update can require a new
+runtime revision even when an older Chromium download remains in the cache.
+Install or update both, then prove a browser can launch:
+
+```bash
+npm install -g @playwright/cli@latest
+playwright-cli install-browser chromium
+playwright-cli open https://example.com
+playwright-cli --raw eval 'document.title'
+playwright-cli close
+```
+
+The runtime is stored beneath `~/.cache/ms-playwright`; the verified Chromium
+and headless-shell downloads use approximately 651 MiB. Repeat
+`playwright-cli install-browser chromium` after every Playwright CLI upgrade so
+the cached browser revision matches the CLI. Generating Mermaid source remains
+browser-free, but browser-backed validation and image or PDF rendering require
+their configured runtime.
 
 Erode is installed for manual, advisory use. The current model validation has
 19 repository-linked components and 50 unlinked components, so Erode should not

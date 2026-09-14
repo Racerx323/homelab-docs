@@ -76,31 +76,31 @@ CodeRabbit requires external network access. Run all `coderabbit review` command
 
 Do not wait for a sandboxed review to time out. If it stalls while connecting, rerun it immediately with network escalation.
 
-## vexp <!-- vexp v2.1.7 -->
+## vexp
 
-**MANDATORY: use `run_pipeline` - do NOT grep or glob the codebase.**
-vexp returns pre-indexed, graph-ranked context in a single call.
+### Context strategy
 
-### Workflow
-1. `run_pipeline` with your task description - ALWAYS FIRST (replaces all other tools)
-2. Make targeted changes based on the context returned
-3. `run_pipeline` again only if you need more context
+Call `run_pipeline` once at task start when the task does not name the files or
+symbols to inspect. Anchor the request on real identifiers or repository paths.
+Use the ranked pivots and blast radius to guide targeted inspection.
 
-### Available MCP tools
-- `run_pipeline` - **PRIMARY TOOL**. Runs capsule + impact + memory in 1 call.
-  Auto-detects intent. Includes file content. Example: `run_pipeline({ "task": "fix auth bug" })`
-- `get_skeleton` - compact file structure
-- `index_status` - indexing status
-- `expand_vexp_ref` - expand V-REF placeholders in v2 output
+Skip `run_pipeline` when the task already names the files or symbols to change.
+Use repository-native search for literal string sweeps. Call `run_pipeline`
+again only when the task moves to another area.
 
-### Agentic search
-- Do NOT use built-in file search, grep, or codebase indexing - always call `run_pipeline` first
-- If you spawn sub-agents or background tasks, pass them the context from `run_pipeline`
-  rather than letting them search the codebase independently
+### MCP tools
 
-### Smart Features
-Intent auto-detection, hybrid ranking, session memory, auto-expanding budget.
+- `run_pipeline` returns ranked pivot files, line ranges, and blast radius.
+- `get_skeleton` describes files that need structural inspection rather than
+  editing.
+- `verify_done` checks a multi-file change for parse errors, broken imports,
+  untouched dependents, documentation drift, and impacted tests. Call it before
+  declaring a multi-file task complete, then run the tests it identifies.
 
-### Multi-Repo
-`run_pipeline` auto-queries all indexed repos. Use `repos: ["alias"]` to scope. Run `index_status` to see aliases.
+### Local workspace
+
+vexp indexes the shared `/home/aaron/code` multi-repository workspace. The VS
+Code extension and Ubuntu CLI use the same workspace index when they target
+that root. Detailed daemon, refresh, status, and repair commands are documented
+in `docs/development-tool-stack.md`.
 <!-- /vexp -->

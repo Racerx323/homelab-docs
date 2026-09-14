@@ -2,15 +2,73 @@
 
 This document records the shared development and validation tools used across
 the homelab repositories. The primary workstation baseline is Ubuntu 24.04
-under WSL2, with PowerShell 7 installed in both Ubuntu and on the Windows host.
-Core tool versions were last verified on July 21, 2026. Codex extensions,
-skills, MCP servers, and agent configuration were last verified on August 2,
-2026. Ansible Core was added and verified on August 25, 2026. Playwright CLI
-and its Chromium runtime were verified on August 27, 2026.
+under WSL2, with VS Code on the Windows host and PowerShell 7 installed in both
+Ubuntu and Windows. The platform, Ubuntu CLI tools, VS Code, active extensions,
+Codex plugin state, and browser runtimes were last verified on September 14,
+2026.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
 checks and arguments.
+
+## Workstation and editor
+
+| Component | Version | Scope |
+| --- | --- | --- |
+| Windows | 10.0.26340.9482 | VS Code host and WSL platform |
+| WSL | 2.9.4.0 | Linux development environment |
+| WSL kernel | 6.18.35.2-microsoft-standard-WSL2 | Microsoft WSL2 kernel |
+| Ubuntu | 24.04.5 LTS | Primary CLI environment |
+| VS Code | 1.137.0, commit `645f29cc3176500b4b5762ba887cf2a7f0ffdf2c` | Windows UI and WSL remote extension host |
+
+VS Code maintains separate Windows-local and WSL extension hosts. The following
+extensions are installed at the same version in both hosts:
+
+| Extension | Version | Extension | Version |
+| --- | --- | --- | --- |
+| `aaron-bond.better-comments` | 3.0.2 | `antonreshetov.masscode-assistant` | 2.0.1 |
+| `christian-kohler.path-intellisense` | 2.10.0 | `coderabbit.coderabbit-vscode` | 0.21.6 |
+| `davidanson.vscode-markdownlint` | 0.62.1 | `eamodio.gitlens` | 19.1.0 |
+| `ecmel.vscode-html-css` | 2.0.14 | `esbenp.prettier-vscode` | 12.4.0 |
+| `formulahendry.code-runner` | 0.12.2 | `github.remotehub` | 0.64.0 |
+| `github.vscode-github-actions` | 0.32.3 | `hashicorp.terraform` | 2.40.0 |
+| `juniormayhe.copy-as-wsl` | 0.0.3 | `justinxai.wsl-reveal-explorer-pro` | 1.1.6 |
+| `likec4.likec4-vscode` | 1.59.3 | `mdickin.markdown-shortcuts` | 0.12.0 |
+| `mermaidchart.vscode-mermaid-chart` | 2.7.8 | `ms-azuretools.vscode-containers` | 2.5.0 |
+| `ms-python.debugpy` | 2026.6.0 | `ms-python.isort` | 2026.6.0 |
+| `ms-python.python` | 2026.4.0 | `ms-python.vscode-pylance` | 2026.3.1 |
+| `ms-python.vscode-python-envs` | 1.36.0 | `ms-vscode.cmake-tools` | 1.24.42 |
+| `ms-vscode.cpp-devtools` | 0.6.18 | `ms-vscode.cpptools` | 1.34.4 |
+| `ms-vscode.cpptools-extension-pack` | 1.5.1 | `ms-vscode.cpptools-themes` | 2.0.0 |
+| `ms-vscode.makefile-tools` | 0.12.17 | `ms-vscode.notepadplusplus-keybindings` | 1.0.7 |
+| `ms-vscode.powershell` | 2025.4.0 | `ms-vscode.remote-repositories` | 0.42.0 |
+| `ms-vscode.vscode-chat-customizations-evaluations` | 1.0.8 | `ms-vscode.vscode-serial-monitor` | 0.13.1 |
+| `openai.chatgpt` | 26.908.40401 | `redhat.vscode-yaml` | 1.24.0 |
+| `ronaldosena.arduino-snippets` | 1.0.2 | `saoudrizwan.claude-dev` | 4.1.17 |
+| `sayedabdulkarim.origami-vscode` | 0.0.2 | `streetsidesoftware.code-spell-checker` | 4.9.3 |
+| `usernamehw.errorlens` | 3.28.0 | `vexp.vexp-vscode` | 3.1.3 |
+| `vscode-icons-team.vscode-icons` | 12.19.0 | `yzane.markdown-pdf` | 2.2.0 |
+| `yzhang.markdown-all-in-one` | 3.6.3 | — | — |
+
+The Windows host additionally owns the extensions that establish and manage
+remote environments:
+
+| Extension | Version | Extension | Version |
+| --- | --- | --- | --- |
+| `jkudo.wsl-manager` | 0.25.3 | `ms-vscode-remote.remote-ssh` | 0.128.0 |
+| `ms-vscode-remote.remote-ssh-edit` | 0.87.0 | `ms-vscode-remote.remote-wsl` | 0.104.3 |
+| `ms-vscode-remote.vscode-remote-extensionpack` | 0.26.0 | `ms-vscode.remote-explorer` | 0.5.0 |
+| `ms-vscode.remote-server` | 1.5.3 | `tyriar.windows-terminal` | 0.7.0 |
+
+Run `code --list-extensions --show-versions` in a WSL terminal to inventory the
+WSL extension host. Run the Windows launcher from PowerShell to inventory the
+Windows-local host. Extension directories can retain older inactive versions,
+so directory listings are not an authoritative active-extension inventory.
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" `
+    --list-extensions --show-versions
+```
 
 ## Core workflow
 
@@ -67,7 +125,8 @@ bats test/
 
 | Tool | Version or constraint | Purpose |
 | --- | --- | --- |
-| PowerShell | 7.6.3 | Runs cross-platform PowerShell and validates Windows automation |
+| PowerShell | 7.6.6 | Runs cross-platform PowerShell and validates Windows automation |
+| Windows PowerShell | 5.1.26100.9482 | Provides the bundled Windows compatibility shell |
 | Pester (Windows local) | 6.0.0; 5.9.0 also installed | Tests PowerShell, registry launchers, and task automation |
 | Pester (CI) | 5.5.0 through 5.99.99 | Runs the authoritative Pester 5 regression suite |
 | GitHub Actions | `windows-latest` | Runs the Pester regression suite on pull requests and `main` |
@@ -116,14 +175,14 @@ Windows-specific tests from PowerShell 7 on the Windows host.
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| markdownlint-cli2 | 0.23.1 | Markdown style and consistency checks |
-| markdown-link-check | 3.14.2 | Checks links in Markdown documents |
+| markdownlint-cli2 | 0.23.2 | Markdown style and consistency checks |
+| markdown-link-check | 3.15.0 | Checks links in Markdown documents |
 | yamllint | 1.33.0 | YAML syntax and style validation |
 | actionlint | 1.7.12 | Static analysis for GitHub Actions workflows |
 | check-jsonschema | 0.37.4 | Schema validation for Compose and GitHub issue YAML |
 | jq | 1.7.1 | JSON queries and syntax validation |
 | Mike Farah `yq` | 4.53.3 | Native YAML queries and edits using `yq eval` syntax |
-| Mermaid CLI (`mmdc`) | 11.16.0 | Validates Mermaid files and exports SVG, PNG, or PDF |
+| Mermaid CLI (`mmdc`) | 11.17.0 installed; 11.16.0 repository pin | Validates Mermaid files and exports SVG, PNG, or PDF |
 
 Common direct checks include:
 
@@ -146,6 +205,9 @@ yq --version
 The Mermaid CLI version is pinned in `.mermaid-version`. See
 [Mermaid Installation and Configuration](mermaid-installation-and-configuration.md)
 for the authoring, validation, export, editor, pre-commit, and CI workflow.
+The current global CLI is one release ahead of this repository's pin. Mermaid
+validation is expected to fail closed until the global package is returned to
+11.16.0 or a separately reviewed repository change advances the pin.
 
 actionlint complements yamllint with GitHub Actions-aware semantic, expression,
 action-input, reusable-workflow, and inline-script checks. See
@@ -161,7 +223,7 @@ pull-request coverage are governed by
 | Tool | Version | Purpose |
 | --- | --- | --- |
 | Gitleaks | 8.16.0 | Detects secrets in staged changes |
-| Trivy | 0.72.0 | Scans Terraform configuration and container images |
+| Trivy | 0.74.0 | Scans Terraform configuration and container images |
 | Podman | 4.9.3 | Builds, runs, and inspects rootless containers |
 | Skopeo | 1.13.3 | Inspects and copies container images without running them |
 
@@ -187,10 +249,10 @@ skopeo inspect docker://docker.io/library/alpine:latest
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| Terraform | 1.15.8 | Formats, validates, plans, and applies infrastructure |
+| Terraform | 1.16.2 | Formats, validates, plans, and applies infrastructure |
 | TFLint | 0.63.1 | Finds Terraform errors and provider-specific problems |
 | terraform-docs | 0.24.0 | Generates module input and output documentation |
-| Trivy | 0.72.0 | Scans infrastructure-as-code configuration |
+| Trivy | 0.74.0 | Scans infrastructure-as-code configuration |
 
 Use this local validation sequence from `homelab-terraform`:
 
@@ -241,19 +303,73 @@ authorization boundary.
 | Tool | Version or model | Purpose |
 | --- | --- | --- |
 | Codex CLI | 0.142.4 | Repository-aware implementation and troubleshooting |
-| GitHub Copilot CLI | 1.0.72 | Command-line development assistance |
-| CodeRabbit CLI | 0.6.5 | AI review of local changes and committed ranges |
+| GitHub Copilot CLI | 1.0.83 | Command-line development assistance |
+| CodeRabbit CLI | 0.7.6 | AI review of local changes and committed ranges |
 | BCS | 2.0.1 | AI-assisted Bash code review |
-| Ollama | 0.24.0; `qwen3.5:9b` | Local inference backend and model used by BCS |
-| vexp CLI | 2.2.3 | Indexed repository context and impact analysis |
-| LikeC4 CLI and MCP | 1.59.1 | Architecture-as-code modeling, validation, previews, and model queries |
-| Erode CLI | 0.9.4 | AI-assisted comparison of code changes with the LikeC4 model |
-| Playwright CLI | 0.1.18 | Browser inspection and automation for agent-assisted workflows |
+| Ollama | 0.32.14; `qwen3.5:9b` | Local inference backend and model used by BCS |
+| vexp CLI | 3.1.3 | Local multi-repository context, impact analysis, and completion checks |
+| LikeC4 CLI and MCP | 1.59.3 | Architecture-as-code modeling, validation, previews, and model queries |
+| Erode CLI | 0.10.3 | AI-assisted comparison of code changes with the LikeC4 model |
+| Playwright CLI | 0.1.19 | Browser inspection and automation for agent-assisted workflows |
 | Playwright Chromium | Runtime 1237; Chrome for Testing 152.0.7977.8 | Version-matched browser used by Playwright CLI |
 
 LikeC4 is installed globally under the active NVM Node.js version. See
 [LikeC4 Installation and Configuration](likec4-installation-and-configuration.md)
 for the workstation, Codex, VS Code, repository, and CI setup.
+
+### vexp indexing and IDE integration
+
+The global Ubuntu CLI and the VS Code extension use the same workspace index
+when both target `/home/aaron/code`. The primary index and workspace definition
+live under `/home/aaron/code/.vexp`. Each registered child repository has a
+local `.vexp/parent_workspace.json` pointer to that workspace. The files under
+`.vexp` are workstation state and do not belong in Git.
+
+A running daemon indexes saved files as they change. Workspace Git hooks
+finalize the index before a commit, synchronize it after a branch checkout,
+and recover it after a merge. Normal editing through VS Code or the Ubuntu CLI
+does not require a separate `vexp index` command while the shared daemon is
+running and the index reports no stale files.
+
+Check the shared workspace from its root:
+
+```bash
+cd /home/aaron/code
+vexp --version
+vexp daemon-cmd status
+vexp index --status
+vexp hooks check
+vexp doctor
+```
+
+The daemon status lists the primary workspace and each indexed repository.
+`vexp index --status` reports the primary workspace-root counts, so its file
+count does not equal the sum of all secondary repositories. Use the daemon or
+doctor output for aggregate and per-repository counts.
+
+Start a stopped daemon with:
+
+```bash
+cd /home/aaron/code
+vexp daemon-cmd start
+```
+
+Run a full refresh after a vexp upgrade, a workspace membership change, a
+repaired parent-workspace link, or a nonzero stale count:
+
+```bash
+cd /home/aaron/code
+vexp daemon-cmd restart
+vexp index /home/aaron/code
+vexp index --status
+vexp doctor
+```
+
+The current vexp release writes its version, timestamp, and primary-root counts
+to `/home/aaron/code/.vexp/manifest.json`. Do not delete `.vexp` to repair a
+stale manifest. Restart the daemon and use the supported index command first.
+A successful repair requires a reachable daemon socket, `Stale: 0`, current
+manifest metadata, and a clean `vexp doctor` result.
 
 Playwright CLI and its Chromium runtime are part of the development-tool
 baseline for browser inspection and automation. The npm package and browser
@@ -325,18 +441,17 @@ connector identifiers, authentication state, or generated session files into
 this repository. Record capability names and purposes here; keep credentials
 in their owning credential store.
 
-### Installed plugins
+### Installed Ubuntu CLI plugins
 
 | Plugin | Version | Included capability |
 | --- | --- | --- |
 | Context7 | 1.0.1 | Current library and framework documentation through a skill and MCP server |
-| CodeRabbit | 1.1.4 | Code review skill backed by the CodeRabbit CLI and service |
-| Codex Security | 0.1.15 | Security workflow skills, scan tools, and result UI |
-| GitHub | 0.1.8 | GitHub repository, issue, pull request, review, and Actions workflows through the GitHub app and `gh` |
 
-Plugin builds can include a build suffix after the displayed version. Use the
-Codex plugin browser to inspect the exact installed build and to enable,
-disable, update, or remove a plugin.
+`codex plugin list --json` is the authority for the Ubuntu CLI plugin inventory.
+Packages retained beneath the Codex plugin cache are not installed plugins.
+CodeRabbit remains available through its standalone CLI and VS Code extension;
+GitHub workflows remain available through `gh` and the GitHub VS Code
+extensions.
 
 ### Skills
 
@@ -346,12 +461,9 @@ trigger rules and procedures remain in each skill's `SKILL.md`.
 
 | Scope | Skills | Purpose |
 | --- | --- | --- |
-| Codex system | `imagegen`, `openai-docs`, `plugin-creator`, `skill-creator`, `skill-installer` | Image generation, authoritative OpenAI documentation, and creation or installation of Codex extensions |
+| Codex system | `imagegen`, `openai-docs`, `plugin-creator`, `review-agent`, `skill-creator`, `skill-installer` | Image generation, authoritative OpenAI documentation, review support, and creation or installation of Codex extensions |
 | Personal | `context7-mcp`, `likec4-dsl`, `playwright-cli`, `stop-slop` | Current technical documentation, LikeC4 DSL guidance, browser automation, and prose cleanup |
 | Context7 plugin | `context7:context7-mcp` | Documentation lookup workflow bundled with the Context7 MCP server |
-| CodeRabbit plugin | `coderabbit:code-review` | Review local or pull request changes and support fix-review cycles |
-| GitHub plugin | `github:github`, `github:gh-address-comments`, `github:gh-fix-ci`, `github:yeet` | GitHub orientation, review-comment fixes, Actions repair, and draft pull request publication |
-| Codex Security plugin | `codex-security:attack-path-analysis`, `codex-security:deep-security-scan`, `codex-security:define-security-policy`, `codex-security:finding-discovery`, `codex-security:fix-finding`, `codex-security:propose-security-hardening`, `codex-security:security-diff-scan`, `codex-security:security-scan`, `codex-security:threat-model`, `codex-security:track-findings`, `codex-security:triage-finding`, `codex-security:validation`, `codex-security:vulnerability-writeup` | Security policy, scanning, validation, remediation, tracking, threat modeling, and reporting workflows |
 
 The personal `context7-mcp` skill and the plugin-provided
 `context7:context7-mcp` skill implement the same workflow from different
@@ -360,17 +472,18 @@ is required.
 
 Personal standalone skills belong in `$HOME/.agents/skills`. Codex-managed
 system skills and compatibility data remain under `$HOME/.codex/skills`.
+Client-provided session skills can differ from this persistent Ubuntu CLI
+inventory and must be read from the active session's skill catalog.
 
 ### MCP servers
 
 | Server | Provisioning | Purpose |
 | --- | --- | --- |
-| vexp | Global Codex configuration; vexp CLI 2.2.3 | Local indexed repository context, impact analysis, and repository memory |
-| LikeC4 | Global Codex configuration; LikeC4 1.59.1 | Architecture model search, graph queries, semantic layout, and view or deployment inspection |
+| vexp | Global Codex configuration; vexp CLI 3.1.3 | Shared local multi-repository context, impact analysis, and completion checks |
+| LikeC4 | Global Codex configuration; LikeC4 1.59.3 | Architecture model search, graph queries, semantic layout, and view or deployment inspection |
 | GitKraken | Global Codex configuration through GitLens | Git operations plus GitHub issue, pull request, workspace, and review workflows |
 | Playwright | Global Codex configuration; on-demand `@playwright/mcp` package | Browser inspection and automation |
 | Context7 | Context7 plugin and global remote-server registration | Current, version-specific library, framework, SDK, API, CLI, and cloud-service documentation |
-| Codex Security | Codex Security plugin | Long-running security scans, scan state, remediation handoff, and result inspection |
 
 Context7 exposes `resolve-library-id` and `query-docs`. Resolve a library name
 before querying its documentation unless the request already supplies an exact
@@ -405,7 +518,7 @@ agents until their configuration exists.
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| Doppler CLI | 3.76.0 | Command-scoped secret injection for local development tools |
+| Doppler CLI | 3.76.5 | Command-scoped secret injection for local development tools |
 
 Erode uses Doppler project `homelab-dev` and config `dev_personal` for its AI
 provider credential. GitHub CLI remains the source of its GitHub token. See
@@ -427,8 +540,8 @@ verification, rotation, and revocation procedures.
 | Python | 3.12.3 | pre-commit, yamllint, and Python-based CLI tooling |
 | pipx | 1.4.3 | Isolated installation of check-jsonschema and Ansible Core |
 | Node.js | 26.4.0 | Markdown and AI CLI tools |
-| npm | 12.0.1 | User-level global Node package installation |
-| Go | 1.26.4 | User-level installation of Go CLIs such as `yq` |
+| npm | 12.0.2 | User-level global Node package installation |
+| Go | 1.26.8 | User-level installation of Go CLIs such as `yq` |
 | NVM | 0.40.5 | Selects the active Node.js toolchain |
 
 User-level executables are installed in `~/.local/bin`, which must appear on
@@ -455,7 +568,7 @@ The current installation channels are:
 | pipx | check-jsonschema, Ansible Core |
 | Go build in `~/.local/bin` | Mike Farah yq v4, actionlint |
 | User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs |
-| Snap | Ollama 0.24.0, published as `mz2` |
+| Snap | Ollama 0.32.14, published as `mz2` |
 
 Avoid similarly named packages from unrelated projects, especially the
 Python/jq-wrapper package named `yq`.

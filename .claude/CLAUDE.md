@@ -1,6 +1,7 @@
-## vexp <!-- vexp v3.3.0 -->
+# vexp - Context-Aware AI Coding <!-- vexp v3.3.0 -->
 
-### Context strategy: call run_pipeline ONCE at task start
+## Context strategy: call run_pipeline ONCE at task start
+
 If the task already names the files/symbols to touch, SKIP vexp. Otherwise one
 `run_pipeline({ "task": "..." })` returns ranked pivot files with line ranges and
 blast radius. Do NOT open files one by one to find your way around - every extra
@@ -8,7 +9,8 @@ tool call costs a turn. Call it again ONLY when the task moves to a new area.
 `get_skeleton` for files to understand, not edit. `verify_done` before calling a
 multi-file task complete, then RUN the tests it names.
 
-### Query shape (do this)
+## Query shape (do this)
+
 Anchor the task on real identifiers (ClassName, functionName) or file paths:
 `run_pipeline({ "task": "fix JWT expiry in AuthService.validateToken" })`
 

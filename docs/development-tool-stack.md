@@ -3,11 +3,12 @@
 This document records the shared development and validation tools used across
 the homelab repositories. The primary workstation baseline is Ubuntu 24.04
 under WSL2, with VS Code on the Windows host and PowerShell 7 installed in both
-Ubuntu and Windows. The platform, Ubuntu CLI tools, VS Code, active extensions,
-Codex plugin state, and browser runtimes were last verified on September 14,
-2026. The Codex skills maintenance, WSL Codex/LikeC4/Playwright CLI versions, and
-matching Chromium runtime were verified on September 29, 2026. Other rows retain
-their September 14 observation date; Windows-local skill discovery was not refreshed.
+Ubuntu and Windows. The WSL CLI versions, WSL extension list, installed Codex plugins, and selected
+LikeC4/Playwright browser qualifications were refreshed on September 29, 2026.
+Windows-local versions and extensions retain their September 14 observations;
+Windows-local skill discovery remains unverified. Repository coverage and
+configuration descriptions are the earlier snapshot unless explicitly refreshed.
+No runtime was upgraded or downgraded during this follow-up.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
@@ -17,43 +18,44 @@ checks and arguments.
 
 | Component | Version | Scope |
 | --- | --- | --- |
-| Windows | 10.0.26340.9482 | VS Code host and WSL platform |
-| WSL | 2.9.4.0 | Linux development environment |
-| WSL kernel | 6.18.35.2-microsoft-standard-WSL2 | Microsoft WSL2 kernel |
+| Windows | 10.0.26340.9482 | Windows host; September 14 observation |
+| WSL | 2.9.4.0 | WSL manager; September 14 observation |
+| WSL kernel | 6.18.40.1-microsoft-standard-WSL2 | Microsoft WSL2 kernel |
 | Ubuntu | 24.04.5 LTS | Primary CLI environment |
-| VS Code | 1.137.0, commit `645f29cc3176500b4b5762ba887cf2a7f0ffdf2c` | Windows UI and WSL remote extension host |
+| VS Code remote launcher | 1.139.1, commit `04c0d99f4fb0d8afe6ce4f0c58e31e183ac3e4b1` | WSL `code --version`, September 29; Windows UI not independently refreshed |
 
-VS Code maintains separate Windows-local and WSL extension hosts. The following
-extensions are installed at the same version in both hosts:
+VS Code maintains separate Windows-local and WSL extension hosts. These are the
+WSL extensions observed on September 29; matching Windows versions are not inferred.
 
 | Extension | Version | Extension | Version |
 | --- | --- | --- | --- |
 | `aaron-bond.better-comments` | 3.0.2 | `antonreshetov.masscode-assistant` | 2.0.1 |
-| `christian-kohler.path-intellisense` | 2.10.0 | `coderabbit.coderabbit-vscode` | 0.21.6 |
-| `davidanson.vscode-markdownlint` | 0.62.1 | `eamodio.gitlens` | 19.1.0 |
+| `christian-kohler.path-intellisense` | 2.10.0 | `coderabbit.coderabbit-vscode` | 0.21.9 |
+| `davidanson.vscode-markdownlint` | 0.62.1 | `eamodio.gitlens` | 19.2.0 |
 | `ecmel.vscode-html-css` | 2.0.14 | `esbenp.prettier-vscode` | 12.4.0 |
 | `formulahendry.code-runner` | 0.12.2 | `github.remotehub` | 0.64.0 |
 | `github.vscode-github-actions` | 0.32.3 | `hashicorp.terraform` | 2.40.0 |
 | `juniormayhe.copy-as-wsl` | 0.0.3 | `justinxai.wsl-reveal-explorer-pro` | 1.1.6 |
-| `likec4.likec4-vscode` | 1.59.3 | `mdickin.markdown-shortcuts` | 0.12.0 |
-| `mermaidchart.vscode-mermaid-chart` | 2.7.8 | `ms-azuretools.vscode-containers` | 2.5.0 |
-| `ms-python.debugpy` | 2026.6.0 | `ms-python.isort` | 2026.6.0 |
-| `ms-python.python` | 2026.4.0 | `ms-python.vscode-pylance` | 2026.3.1 |
-| `ms-python.vscode-python-envs` | 1.36.0 | `ms-vscode.cmake-tools` | 1.24.42 |
-| `ms-vscode.cpp-devtools` | 0.6.18 | `ms-vscode.cpptools` | 1.34.4 |
-| `ms-vscode.cpptools-extension-pack` | 1.5.1 | `ms-vscode.cpptools-themes` | 2.0.0 |
-| `ms-vscode.makefile-tools` | 0.12.17 | `ms-vscode.notepadplusplus-keybindings` | 1.0.7 |
-| `ms-vscode.powershell` | 2025.4.0 | `ms-vscode.remote-repositories` | 0.42.0 |
-| `ms-vscode.vscode-chat-customizations-evaluations` | 1.0.8 | `ms-vscode.vscode-serial-monitor` | 0.13.1 |
-| `openai.chatgpt` | 26.908.40401 | `redhat.vscode-yaml` | 1.24.0 |
-| `ronaldosena.arduino-snippets` | 1.0.2 | `saoudrizwan.claude-dev` | 4.1.17 |
+| `likec4.likec4-vscode` | 1.59.4 | `mdickin.markdown-shortcuts` | 0.12.0 |
+| `mermaidchart.vscode-mermaid-chart` | 2.8.1 | `monokai.theme-monokai-pro-vscode` | 2.0.15 |
+| `ms-azuretools.vscode-containers` | 2.5.2 | `ms-python.debugpy` | 2026.6.0 |
+| `ms-python.isort` | 2026.6.0 | `ms-python.python` | 2026.6.0 |
+| `ms-python.vscode-pylance` | 2026.4.1 | `ms-python.vscode-python-envs` | 1.38.0 |
+| `ms-vscode.cmake-tools` | 1.24.42 | `ms-vscode.cpp-devtools` | 0.6.18 |
+| `ms-vscode.cpptools` | 1.34.4 | `ms-vscode.cpptools-extension-pack` | 1.5.1 |
+| `ms-vscode.cpptools-themes` | 2.0.0 | `ms-vscode.makefile-tools` | 0.12.17 |
+| `ms-vscode.notepadplusplus-keybindings` | 1.0.7 | `ms-vscode.powershell` | 2025.4.0 |
+| `ms-vscode.remote-repositories` | 0.42.0 | `ms-vscode.vscode-chat-customizations-evaluations` | 1.0.9 |
+| `ms-vscode.vscode-serial-monitor` | 0.13.1 | `openai.chatgpt` | 26.917.62051 |
+| `openai.codex-audio` | 26.917.62051 | `redhat.vscode-yaml` | 1.24.0 |
+| `ronaldosena.arduino-snippets` | 1.0.2 | `saoudrizwan.claude-dev` | 4.1.21 |
 | `sayedabdulkarim.origami-vscode` | 0.0.2 | `streetsidesoftware.code-spell-checker` | 4.9.3 |
-| `usernamehw.errorlens` | 3.28.0 | `vexp.vexp-vscode` | 3.1.3 |
-| `vscode-icons-team.vscode-icons` | 12.19.0 | `yzane.markdown-pdf` | 2.2.0 |
-| `yzhang.markdown-all-in-one` | 3.6.3 | — | — |
+| `usernamehw.errorlens` | 3.29.0 | `vexp.vexp-vscode` | 3.3.0 |
+| `vscode-icons-team.vscode-icons` | 13.0.0 | `yzane.markdown-pdf` | 2.2.0 |
+| `yzhang.markdown-all-in-one` | 3.6.3 | `—` | — |
 
-The Windows host additionally owns the extensions that establish and manage
-remote environments:
+The September 14 Windows inventory recorded these remote-management extensions;
+this follow-up did not refresh them:
 
 | Extension | Version | Extension | Version |
 | --- | --- | --- | --- |
@@ -177,14 +179,14 @@ Windows-specific tests from PowerShell 7 on the Windows host.
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| markdownlint-cli2 | 0.23.2 | Markdown style and consistency checks |
+| markdownlint-cli2 | 0.23.3 | Markdown style and consistency checks |
 | markdown-link-check | 3.15.0 | Checks links in Markdown documents |
 | yamllint | 1.33.0 | YAML syntax and style validation |
 | actionlint | 1.7.12 | Static analysis for GitHub Actions workflows |
 | check-jsonschema | 0.37.4 | Schema validation for Compose and GitHub issue YAML |
-| jq | 1.7.1 | JSON queries and syntax validation |
+| jq | 1.7.1 package; CLI banner `jq-1.7` | JSON queries and syntax validation |
 | Mike Farah `yq` | 4.53.3 | Native YAML queries and edits using `yq eval` syntax |
-| Mermaid CLI (`mmdc`) | 12.0.0 installed; 11.16.0 repository pin | Validates Mermaid files and exports SVG, PNG, or PDF |
+| Mermaid CLI (`mmdc`) | 12.0.0 installed and repository pin | Validates Mermaid files and exports SVG, PNG, or PDF |
 
 Common direct checks include:
 
@@ -207,9 +209,14 @@ yq --version
 The Mermaid CLI version is pinned in `.mermaid-version`. See
 [Mermaid Installation and Configuration](mermaid-installation-and-configuration.md)
 for the authoring, validation, export, editor, pre-commit, and CI workflow.
-The current global CLI is one release ahead of this repository's pin. Mermaid
-validation is expected to fail closed until the global package is returned to
-11.16.0 or a separately reviewed repository change advances the pin.
+The repository pin and installed CLI are aligned at 12.0.0, the latest published
+release returned by the npm registry on September 29. Check the current registry
+release during maintenance, update the exact pin, and validate the diagrams.
+The CLI already matched, so no CLI package change was needed. A subsequent
+authorized repair installed chrome-headless-shell 154.0.8037.57, selected by
+bundled Puppeteer 25.12.0. Default rendering and repository checks now pass
+without a browser override. Repeat the matching-browser installation and
+validation procedure in the Mermaid guide after future CLI upgrades.
 
 actionlint complements yamllint with GitHub Actions-aware semantic, expression,
 action-input, reusable-workflow, and inline-script checks. See
@@ -224,7 +231,7 @@ pull-request coverage are governed by
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| Gitleaks | 8.16.0 | Detects secrets in staged changes |
+| Gitleaks | 8.16.0 (APT metadata; CLI build version unset) | Detects secrets in staged changes |
 | Trivy | 0.74.0 | Scans Terraform configuration and container images |
 | Podman | 4.9.3 | Builds, runs, and inspects rootless containers |
 | Skopeo | 1.13.3 | Inspects and copies container images without running them |
@@ -251,7 +258,7 @@ skopeo inspect docker://docker.io/library/alpine:latest
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| Terraform | 1.16.2 | Formats, validates, plans, and applies infrastructure |
+| Terraform | 1.16.4 | Formats, validates, plans, and applies infrastructure |
 | TFLint | 0.63.1 | Finds Terraform errors and provider-specific problems |
 | terraform-docs | 0.24.0 | Generates module input and output documentation |
 | Trivy | 0.74.0 | Scans infrastructure-as-code configuration |
@@ -305,13 +312,13 @@ authorization boundary.
 | Tool | Version or model | Purpose |
 | --- | --- | --- |
 | Codex CLI | 0.159.1 (WSL, September 29) | Repository-aware implementation and troubleshooting |
-| GitHub Copilot CLI | 1.0.83 | Command-line development assistance |
+| GitHub Copilot CLI | 1.0.89 | Command-line development assistance |
 | CodeRabbit CLI | 0.7.6 | AI review of local changes and committed ranges |
 | BCS | 2.0.1 | AI-assisted Bash code review |
-| Ollama | 0.32.14; `qwen3.5:9b` | Local inference backend and model used by BCS |
-| vexp CLI | 3.1.3 | Local multi-repository context, impact analysis, and completion checks |
+| Ollama | 0.34.0; model `qwen3.5:9b` last observed September 14 | Local inference backend and model used by BCS |
+| vexp CLI | 3.3.0 | Local multi-repository context, impact analysis, and completion checks |
 | LikeC4 CLI | 1.59.4 (WSL, September 29; running MCP version not refreshed) | Architecture-as-code modeling, validation, previews, and model queries |
-| Erode CLI | 0.10.3 | AI-assisted comparison of code changes with the LikeC4 model |
+| Erode CLI | 0.11.0 (package metadata) | AI-assisted comparison of code changes with the LikeC4 model |
 | Playwright CLI | 0.1.22 (WSL, September 29) | Browser inspection and automation for agent-assisted workflows |
 | Playwright Chromium | Runtime 1247; Chrome for Testing 155.0.8059.12 (WSL, September 29) | Version-matched browser used by Playwright CLI |
 
@@ -377,27 +384,37 @@ Playwright CLI and its Chromium runtime are part of the development-tool
 baseline for browser inspection and automation. The npm package and browser
 runtime are separate installations. A Playwright CLI update can require a new
 runtime revision even when an older Chromium download remains in the cache.
-Install or update both, then prove a browser can launch:
+Verify the installed CLI, its bundled Playwright package, and that package's
+browser manifest/executable before launching. A cached browser directory alone
+does not establish compatibility. Do not automatically install a runtime during
+an audit or downgrade the intended installed version.
+
+The maintained synthetic qualification is in the personal skills checkout:
 
 ```bash
-npm install -g @playwright/cli@latest
-playwright-cli install-browser chromium
-playwright-cli open https://example.com
-playwright-cli --raw eval 'document.title'
-playwright-cli close
+python3 evals/playwright-cli/verify_lifecycle.py --report /private/path/report.json
 ```
 
-The runtime is stored beneath `~/.cache/ms-playwright`. The matching Chromium
-and headless-shell revision was verified on September 29; disk usage was not
-remeasured. Repeat
-`playwright-cli install-browser chromium` after every Playwright CLI upgrade so
-the cached browser revision matches the CLI. Generating Mermaid source remains
-browser-free, but browser-backed validation and image or PDF rendering require
-their configured runtime.
+Run from that checkout, outside the filesystem sandbox, with a private report
+parent. The harness creates an owner-private working/output directory before
+launch, unique task sessions, and synthetic loopback pages. It uses only the
+existing CLI/browser pairing, closes only owned sessions/tabs, and preserves
+preexisting tabs in its synthetic attached browser. Raw state, traces, and video
+stay in its private task folder; the report contains sanitized evidence.
 
-Erode is installed for manual, advisory use. The current model validation has
+The runtime is stored beneath `~/.cache/ms-playwright`. CLI 0.1.22 was qualified
+with its bundled Playwright/Core 1.64.0-alpha-1790635538000 and Chromium 1247.
+Any future runtime installation is a separate maintenance action. Generating
+Mermaid source remains browser-free; browser-backed validation and rendering
+require their own configured runtime.
+
+Erode is installed for manual, advisory use. The earlier model snapshot had
 19 repository-linked components and 50 unlinked components, so Erode should not
 be promoted to a blocking check until the relevant mappings are complete.
+
+The current Erode version comes from package metadata: direct `--version` failed
+because the provider credential was unavailable in that command environment.
+No credential was retrieved or provider request made for this inventory.
 
 BCS is maintained in `bash-bcs-workspace`. Its configured model name must match
 an installed Ollama model:
@@ -419,7 +436,7 @@ coderabbit review --plain
 The CLI is sufficient for terminal and Codex review workflows; a VS Code
 extension is optional.
 
-Every managed repository contains a root `.coderabbit.yaml` that inherits the
+The earlier repository survey recorded a root `.coderabbit.yaml` that inherits the
 CodeRabbit organization settings and applies the shared draft-first policy:
 
 - automatic reviews remain enabled for ready pull requests;
@@ -448,13 +465,20 @@ in their owning credential store.
 
 | Plugin | Version | Included capability |
 | --- | --- | --- |
-| Context7 | 1.0.1 | Current library and framework documentation through a skill and MCP server |
+| Context7 | 1.0.1 | Library documentation skill and MCP server |
+| GitHub | 0.1.12-5f7cd798dc99 | GitHub connector tools |
+| Codex Security | 0.1.31 | Security review workflows |
+| Mintlify MCP | 1.0.0 | Documentation connector tools |
+| CodeRabbit | 1.1.4 | Review workflow skill |
+| OpenAI Templates | 0.1.1 | Explicit workflow templates |
+| Pages | 0.1.18 | Page and Space workflows |
+| Plugin Management | 0.1.0 | Plugin management workflow |
+| Work Pets | 0.1.6 | Pet asset workflows |
 
-`codex plugin list --json` is the authority for the Ubuntu CLI plugin inventory.
-Packages retained beneath the Codex plugin cache are not installed plugins.
-CodeRabbit remains available through its standalone CLI and VS Code extension;
-GitHub workflows remain available through `gh` and the GitHub VS Code
-extensions.
+All nine were installed and enabled in the September 29 `codex plugin list --json`
+result. That command is the installation authority; cached packages and a
+session's supplied skill catalog are separate observations. Enabled installation
+does not prove every capability is callable in every client.
 
 ### Skills
 
@@ -464,12 +488,17 @@ trigger rules and procedures remain in each skill's `SKILL.md`.
 
 | Scope | Skills | Purpose |
 | --- | --- | --- |
-| Codex system, discovered by CLI | `imagegen`, `openai-docs`, `review-agent`, `skill-creator`, `skill-installer` | Image generation, authoritative OpenAI documentation, review support, and skill creation or installation |
+| Codex system, supplied in this conversation | `imagegen`, `openai-docs`, `plugin-creator`, `skill-creator`, `skill-installer` | Image generation, authoritative OpenAI documentation, review support, and skill creation or installation |
 | Personal | `clear-writing`, `likec4-dsl`, `playwright-cli` | Prose drafting, editing and detection; LikeC4 DSL guidance; browser automation |
 | Context7 plugin | `context7:context7-mcp` | Documentation lookup workflow bundled with the Context7 MCP server |
 
-On September 29, 2026, forced CLI discovery returned nine enabled skills with
-no load errors. Supported `codex update` moved the standalone CLI from 0.159.0
+An earlier September 29 maintenance probe returned nine enabled skills with
+no load errors; that is a historical discovery result, not the current plugin count.
+The later audit counted 54 on-disk entrypoints and 33 supplied session skills,
+including five system, three personal, and 25 plugin skills. Disk presence does
+not prove discovery. Active-home discovery was not forced during this follow-up.
+
+During the earlier maintenance, supported `codex update` moved the standalone CLI from 0.159.0
 to 0.159.1. It did not resolve the `plugin-creator` discrepancy. In one invocation,
 CLI discovery removed that skill's eleven files and changed the managed cache
 marker while leaving other system-file hashes unchanged. The session host later
@@ -530,12 +559,15 @@ not assumed to match another client.
 | Clear Writing, LikeC4, Playwright skills | Discovered, enabled | Supplied | Unverified | Personal source bundles; refresh after deployment |
 | Context7 1.0.1 | Installed, enabled; skill discovered | Skill and MCP supplied | Unverified | Plugin; keep one personal/plugin copy |
 | imagegen, openai-docs, skill-creator, skill-installer | Discovered, enabled | Supplied | Unverified | Codex-managed |
-| review-agent | Discovered, enabled | Not in supplied catalog | Unverified | Codex-managed; client availability differs |
-| plugin-creator | Omitted; removed during cache refresh | Supplied | Unverified | Codex-managed; reproducible cache conflict |
-| CodeRabbit 1.1.4 skill package | No persistent CLI plugin installation established | Supplied | Unverified | Session/plugin owner; standalone CLI is a separate tool |
-| Codex Security 0.1.31 skill package | No persistent CLI plugin installation established | Supplied | Unverified | Session/plugin owner; source audit has host/native limitations |
-| plugin-management 0.1.0 | No persistent CLI plugin installation established | Supplied | Unverified | Session/plugin owner |
-| work-pets 0.1.6 | No persistent CLI plugin installation established | Supplied | Unverified | Session/plugin owner; uploaded assets need task authorization |
+| review-agent | Earlier discovery only | Not in supplied catalog | Unverified | Codex-managed; client availability differs |
+| plugin-creator | Earlier refresh removed it; current discovery not forced | Supplied | Unverified | Codex-managed; reproducible cache conflict |
+| CodeRabbit 1.1.4 skill package | Installed, enabled; fresh CLI skill discovery not forced | Supplied | Unverified | Session/plugin owner; standalone CLI is a separate tool |
+| Codex Security 0.1.31 skill package | Installed, enabled; fresh CLI skill discovery not forced | Supplied | Unverified | Session/plugin owner; source audit has host/native limitations |
+| plugin-management 0.1.0 | Installed, enabled; fresh CLI skill discovery not forced | Supplied | Unverified | Session/plugin owner |
+| work-pets 0.1.6 | Installed, enabled; fresh CLI skill discovery not forced | Supplied | Unverified | Session/plugin owner; uploaded assets need task authorization |
+| Pages 0.1.18 | Installed, enabled | Skills supplied | Unverified | Plugin owner |
+| OpenAI Templates 0.1.1 | Installed, enabled | Not supplied | Unverified | Explicit templates; availability differs |
+| GitHub / Mintlify MCP | Installed, enabled | Tool discovery separate | Unverified | Connector owner |
 
 The WSL VS Code extension reports `openai.chatgpt@26.917.62051`; an extension
 version is not proof of its complete skill catalog. Session-supplied capabilities
@@ -549,16 +581,17 @@ remain an explicit inventory gap.
 #### Runtime and audit notes
 
 Playwright CLI 0.1.22 uses playwright/core 1.64.0-alpha-1790635538000. Its required
-Chromium 1247 was missing; the user-approved install supplied Chrome for Testing
+Chromium 1247 was missing during earlier maintenance; that user-approved install supplied Chrome for Testing
 155.0.8059.12 and matching headless shell. The installer also garbage-collected
 unused Chromium 1237; this was not a CLI package update. Loopback fixtures checked
 interaction, synthetic state save/load, named-session cleanup and external-browser
 detach/reconnection. These checks do not exercise production sites or accounts.
 
 The expanded risk-based static audit includes skill instructions, helpers and
-available bundled plugin implementation, including decoded JavaScript. It found
-two LOW local integrity issues involving pre-created shared temporary directories
-(documentation cache and temporary security artifacts). The canonical report
+available bundled plugin implementation, including decoded JavaScript. It recorded
+three LOW local integrity issues involving shared temporary paths: the manual
+cache, security supplemental artifacts, and the skill installer. The first two
+were already known; the installer issue was reproduced during the audit. The canonical report
 records exact evidence. Native host/service implementation and inherited MCP
 write authority remain unverified; a local read-only profile does not prove all
 MCP tools are read-only. System/plugin source was not patched. Local mitigations now use a checked private
@@ -574,8 +607,8 @@ for boundaries and follow-up.
 
 | Server | Provisioning | Purpose |
 | --- | --- | --- |
-| vexp | Global Codex configuration; vexp CLI 3.1.3 | Shared local multi-repository context, impact analysis, and completion checks |
-| LikeC4 | Global Codex configuration; LikeC4 1.59.3 | Architecture model search, graph queries, semantic layout, and view or deployment inspection |
+| vexp | Global Codex configuration; running MCP version unverified | Shared local multi-repository context, impact analysis, and completion checks |
+| LikeC4 | Global Codex configuration; running MCP version unverified | Architecture model search, graph queries, semantic layout, and view or deployment inspection |
 | GitKraken | Global Codex configuration through GitLens | Git operations plus GitHub issue, pull request, workspace, and review workflows |
 | Playwright | Global Codex configuration; on-demand `@playwright/mcp` package | Browser inspection and automation |
 | Context7 | Context7 plugin and global remote-server registration | Current, version-specific library, framework, SDK, API, CLI, and cloud-service documentation |
@@ -613,7 +646,7 @@ agents until their configuration exists.
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| Doppler CLI | 3.76.5 | Command-scoped secret injection for local development tools |
+| Doppler CLI | 3.76.6 | Command-scoped secret injection for local development tools |
 
 Erode uses Doppler project `homelab-dev` and config `dev_personal` for its AI
 provider credential. GitHub CLI remains the source of its GitHub token. See
@@ -635,7 +668,7 @@ verification, rotation, and revocation procedures.
 | Python | 3.12.3 | pre-commit, yamllint, and Python-based CLI tooling |
 | pipx | 1.4.3 | Isolated installation of check-jsonschema and Ansible Core |
 | Node.js | 26.4.0 | Markdown and AI CLI tools |
-| npm | 12.0.2 | User-level global Node package installation |
+| npm | 12.1.0 | User-level global Node package installation |
 | Go | 1.26.8 | User-level installation of Go CLIs such as `yq` |
 | NVM | 0.40.5 | Selects the active Node.js toolchain |
 
@@ -653,7 +686,7 @@ GOBIN="$HOME/.local/bin" go install \
     github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
 ```
 
-The current installation channels are:
+Recorded installation channels (not all re-probed on September 29) are:
 
 | Channel | Tools |
 | --- | --- |
@@ -663,17 +696,16 @@ The current installation channels are:
 | pipx | check-jsonschema, Ansible Core |
 | Go build in `~/.local/bin` | Mike Farah yq v4, actionlint |
 | User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs |
-| Snap | Ollama 0.32.14, published as `mz2` |
+| Snap | Ollama 0.34.0, published as `mz2` |
 
 Avoid similarly named packages from unrelated projects, especially the
 Python/jq-wrapper package named `yq`.
 
 ## Repository validation coverage
 
-All managed repositories use local pre-commit hooks for applicable files:
+The earlier repository survey recorded these local pre-commit checks for applicable files:
 ShellCheck, shfmt, markdownlint-cli2, yamllint, GitHub issue-form schemas,
-Compose schemas, JSON parsing with jq, Gitleaks, and actionlint. Every managed
-repository calls the shared baseline GitHub Actions workflow. A hook runs only
+Compose schemas, JSON parsing with jq, Gitleaks, and actionlint. Surveyed repositories called the shared baseline GitHub Actions workflow. A hook runs only
 when a repository contains a matching file type. Repository-specific coverage
 is:
 
@@ -701,7 +733,6 @@ permissions and uses an immutable `actions/checkout` commit on
 After installing or upgrading tools, verify the complete repository suite:
 
 ```bash
-pre-commit clean
 pre-commit run --all-files
 ```
 

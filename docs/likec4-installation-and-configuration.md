@@ -91,11 +91,12 @@ likec4 --version
 
 ## Install the LikeC4 agent skill globally
 
-LikeC4 publishes the `likec4-dsl` skill. It provides syntax, modeling
-patterns, examples, and validation guidance to compatible AI coding agents.
-Install it once at user scope for Codex:
+The official upstream skill lives in
+[likec4/likec4, skills/likec4-dsl](https://github.com/likec4/likec4/tree/main/skills/likec4-dsl).
+The original workstation setup installed its website distribution with:
 
 ```bash
+# Historical upstream installation; do not run over the maintained adaptation.
 npx skills add https://likec4.dev/ \
     --skill likec4-dsl \
     --agent codex \
@@ -103,22 +104,24 @@ npx skills add https://likec4.dev/ \
     --yes
 ```
 
-Verify that the skill is installed and linked to Codex:
+The installer lock recorded a download from the likec4.dev well-known skill
+archive on July 20, 2026, without an immutable commit or archive hash. The
+GitHub repository is the source; the archive is the delivery method. The
+[Vercel Skills CLI](https://github.com/vercel-labs/skills) is the installer.
 
-```bash
-npx skills list --global --agent codex
-```
+Since September 29, the reviewed personal adaptation is maintained in
+[personal-codex-skills](https://github.com/Racerx323/personal-codex-skills),
+under `skills/likec4-dsl`. Its upstream MIT notice, comparison commit, changes,
+and evaluation results are retained there. Deploy that individual bundle to
+`$HOME/.agents/skills/likec4-dsl` using the repository's backup, hash verification,
+and rollback procedure in `docs/maintenance.md`. The old upstream updater record
+is retired so it cannot silently replace the adaptation.
 
-The global installation makes the skill available from every repository and
-avoids checking an identical skill into each repository. Restart Codex if the
-skill does not appear in an existing session.
-
-Codex can invoke the skill automatically while working with `.c4` and
-`.likec4` files. It can also be selected explicitly from the skills menu or by
-mentioning `$likec4-dsl` in a prompt.
-
-To install the same skill for another supported agent, rerun the command
-without `--agent codex` and select the desired agents interactively.
+Verify the deployed SKILL.md and use the current client's skill discovery after
+installation. The global personal installation serves every repository; do not
+copy it into each project or into Codex-managed system directories. Start a fresh
+Codex conversation to refresh a stale catalog. Invoke `$likec4-dsl` explicitly
+or let its description select it for `.c4` and `.likec4` work.
 
 ## Configure the LikeC4 MCP server for Codex
 
@@ -362,7 +365,7 @@ Run this checklist after the initial installation or a major upgrade:
 nvm use default
 node --version
 likec4 --version
-npx skills list --global --agent codex
+test -f "$HOME/.agents/skills/likec4-dsl/SKILL.md"
 codex mcp list
 code --list-extensions
 ```
@@ -389,12 +392,10 @@ npm update --global likec4
 likec4 --version
 ```
 
-Update the global skill separately:
-
-```bash
-npx skills update likec4-dsl --global
-npx skills list --global --agent codex
-```
+Update the personal skill separately through `personal-codex-skills`. Review
+an immutable upstream GitHub commit, merge accepted guidance into the adaptation,
+rerun behavioral and CLI evaluations, then back up and replace the deployed
+bundle. Do not run `npx skills update likec4-dsl --global` over this adaptation.
 
 After an upgrade:
 
@@ -459,15 +460,16 @@ Confirm all of the following:
 
 ### The skill is installed but does not appear
 
-Check its global status:
+Check the deployed entrypoint:
 
 ```bash
-npx skills list --global --agent codex
+test -f "$HOME/.agents/skills/likec4-dsl/SKILL.md"
 ```
 
-Restart Codex after installing or updating the skill. If the skills CLI reports
-that the skill is not linked, rerun the installation interactively and confirm
-Codex as the target agent.
+Then check this client's skill discovery and start a fresh conversation. A file
+existence check alone does not prove discovery. Compare deployed hashes against
+the personal-skills installation record before attempting repair; do not reinstall
+the upstream skill over the maintained adaptation.
 
 ### VS Code does not activate the extension
 
@@ -483,10 +485,11 @@ Remove the MCP registration first:
 codex mcp remove likec4
 ```
 
-Remove the skill and global CLI:
+To remove the personal skill, verify its installation record and move only
+`$HOME/.agents/skills/likec4-dsl` to a retained archive outside discovery. Refresh
+client discovery. Remove the global CLI separately if it is no longer needed:
 
 ```bash
-npx skills remove likec4-dsl --global --agent codex --yes
 npm uninstall --global likec4
 ```
 

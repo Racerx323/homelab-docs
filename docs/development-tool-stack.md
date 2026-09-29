@@ -5,7 +5,9 @@ the homelab repositories. The primary workstation baseline is Ubuntu 24.04
 under WSL2, with VS Code on the Windows host and PowerShell 7 installed in both
 Ubuntu and Windows. The platform, Ubuntu CLI tools, VS Code, active extensions,
 Codex plugin state, and browser runtimes were last verified on September 14,
-2026.
+2026. The Codex skills maintenance, WSL Codex/LikeC4/Playwright CLI versions, and
+matching Chromium runtime were verified on September 29, 2026. Other rows retain
+their September 14 observation date; Windows-local skill discovery was not refreshed.
 
 The version table is an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
@@ -302,16 +304,16 @@ authorization boundary.
 
 | Tool | Version or model | Purpose |
 | --- | --- | --- |
-| Codex CLI | 0.142.4 | Repository-aware implementation and troubleshooting |
+| Codex CLI | 0.159.1 (WSL, September 29) | Repository-aware implementation and troubleshooting |
 | GitHub Copilot CLI | 1.0.83 | Command-line development assistance |
 | CodeRabbit CLI | 0.7.6 | AI review of local changes and committed ranges |
 | BCS | 2.0.1 | AI-assisted Bash code review |
 | Ollama | 0.32.14; `qwen3.5:9b` | Local inference backend and model used by BCS |
 | vexp CLI | 3.1.3 | Local multi-repository context, impact analysis, and completion checks |
-| LikeC4 CLI and MCP | 1.59.3 | Architecture-as-code modeling, validation, previews, and model queries |
+| LikeC4 CLI | 1.59.4 (WSL, September 29; running MCP version not refreshed) | Architecture-as-code modeling, validation, previews, and model queries |
 | Erode CLI | 0.10.3 | AI-assisted comparison of code changes with the LikeC4 model |
-| Playwright CLI | 0.1.19 | Browser inspection and automation for agent-assisted workflows |
-| Playwright Chromium | Runtime 1237; Chrome for Testing 152.0.7977.8 | Version-matched browser used by Playwright CLI |
+| Playwright CLI | 0.1.22 (WSL, September 29) | Browser inspection and automation for agent-assisted workflows |
+| Playwright Chromium | Runtime 1247; Chrome for Testing 155.0.8059.12 (WSL, September 29) | Version-matched browser used by Playwright CLI |
 
 LikeC4 is installed globally under the active NVM Node.js version. See
 [LikeC4 Installation and Configuration](likec4-installation-and-configuration.md)
@@ -385,8 +387,9 @@ playwright-cli --raw eval 'document.title'
 playwright-cli close
 ```
 
-The runtime is stored beneath `~/.cache/ms-playwright`; the verified Chromium
-and headless-shell downloads use approximately 651 MiB. Repeat
+The runtime is stored beneath `~/.cache/ms-playwright`. The matching Chromium
+and headless-shell revision was verified on September 29; disk usage was not
+remeasured. Repeat
 `playwright-cli install-browser chromium` after every Playwright CLI upgrade so
 the cached browser revision matches the CLI. Generating Mermaid source remains
 browser-free, but browser-backed validation and image or PDF rendering require
@@ -461,19 +464,105 @@ trigger rules and procedures remain in each skill's `SKILL.md`.
 
 | Scope | Skills | Purpose |
 | --- | --- | --- |
-| Codex system | `imagegen`, `openai-docs`, `plugin-creator`, `review-agent`, `skill-creator`, `skill-installer` | Image generation, authoritative OpenAI documentation, review support, and creation or installation of Codex extensions |
-| Personal | `context7-mcp`, `likec4-dsl`, `playwright-cli`, `stop-slop` | Current technical documentation, LikeC4 DSL guidance, browser automation, and prose cleanup |
+| Codex system, discovered by CLI | `imagegen`, `openai-docs`, `review-agent`, `skill-creator`, `skill-installer` | Image generation, authoritative OpenAI documentation, review support, and skill creation or installation |
+| Personal | `clear-writing`, `likec4-dsl`, `playwright-cli` | Prose drafting, editing and detection; LikeC4 DSL guidance; browser automation |
 | Context7 plugin | `context7:context7-mcp` | Documentation lookup workflow bundled with the Context7 MCP server |
 
-The personal `context7-mcp` skill and the plugin-provided
-`context7:context7-mcp` skill implement the same workflow from different
-installation scopes. Prefer the plugin skill when its bundled MCP dependency
-is required.
+On September 29, 2026, forced CLI discovery returned nine enabled skills with
+no load errors. Supported `codex update` moved the standalone CLI from 0.159.0
+to 0.159.1. It did not resolve the `plugin-creator` discrepancy. In one invocation,
+CLI discovery removed that skill's eleven files and changed the managed cache
+marker while leaving other system-file hashes unchanged. The session host later
+materialized its copy again. Its unchanged entrypoint was discoverable in a
+throwaway repo, so a frontmatter failure is not supported by the reproducer.
 
-Personal standalone skills belong in `$HOME/.agents/skills`. Codex-managed
-system skills and compatibility data remain under `$HOME/.codex/skills`.
-Client-provided session skills can differ from this persistent Ubuntu CLI
-inventory and must be read from the active session's skill catalog.
+Keep system maintenance through Codex. Do not patch `.system`, its marker, or
+add a personal duplicate. The local skills repository contains a prepared
+upstream report, evidence and a reproduction procedure in
+`docs/plugin-creator-cache-refresh.md`; no upstream issue has been submitted.
+
+The personal `context7-mcp` entrypoint was byte-for-byte identical to the plugin
+entrypoint. After verifying plugin discovery and a successful documentation lookup,
+the personal duplicate was backed up and retired. Use `context7:context7-mcp`.
+The Context7 plugin and MCP configuration were not changed.
+
+`clear-writing` replaces `stop-slop` with one curated skill derived from Stop Slop
+and No AI Slop. It supports drafting, minimal editing, and detection without
+rewriting or claiming AI authorship. It preserves facts, uncertainty, technical
+literals, operational boundaries, and the writer's voice. Meaningful adverbs,
+passive voice, and software subjects remain valid. No separate `no-ai-slop` or
+Taste Skill installation was added.
+
+Source, upstream commit hashes, MIT notices, evaluation cases, and maintenance
+instructions live in
+[personal-codex-skills](https://github.com/Racerx323/personal-codex-skills).
+The local source checkout is `$HOME/code/personal-codex-skills`; install only its
+reviewed `skills/<name>/` bundle into `$HOME/.agents/skills/<name>/`.
+The installed bundle is a verified copy and does not automatically follow source edits.
+
+Both retired personal skills and their hash manifest are retained outside discovery
+under `$HOME/.local/state/personal-codex-skills/backups/20260929T202415Z/`.
+The skills repository documents restoration and records installed file hashes.
+The September 29 maintenance adapts LikeC4 and Playwright in the personal skills
+repository, retains upstream license notices, and moves lengthy catalogs into
+references. LikeC4 guidance now checks file-filter counts, avoids obsolete
+version pinning, and corrects parser-tested deployment, identifier, predicate
+and dynamic-view rules. Playwright guidance limits cleanup to owned sessions,
+protects state artifacts and preserves requested test assertions. The detailed
+installation record, audit coverage and test results belong in that repository's
+`docs/maintenance-result-2026-09-29.md` and `evals/maintenance-2026-09-29/`.
+
+Personal standalone skills belong in `$HOME/.agents/skills`. Codex-managed system
+skills and compatibility data remain under `$HOME/.codex/skills`.
+
+#### Per-client capability inventory
+
+Maintain this matrix here as the shared operational inventory. Keep file hashes,
+source provenance, evaluation transcripts and rollback records in the skills
+repository/private state archive, not duplicated throughout this document.
+Observation date: September 29, 2026. An unavailable client is marked unverified,
+not assumed to match another client.
+
+| Capability | WSL CLI 0.159.1 | Active Codex conversation | Windows-local client | Owner / action |
+| --- | --- | --- | --- | --- |
+| Clear Writing, LikeC4, Playwright skills | Discovered, enabled | Supplied | Unverified | Personal source bundles; refresh after deployment |
+| Context7 1.0.1 | Installed, enabled; skill discovered | Skill and MCP supplied | Unverified | Plugin; keep one personal/plugin copy |
+| imagegen, openai-docs, skill-creator, skill-installer | Discovered, enabled | Supplied | Unverified | Codex-managed |
+| review-agent | Discovered, enabled | Not in supplied catalog | Unverified | Codex-managed; client availability differs |
+| plugin-creator | Omitted; removed during cache refresh | Supplied | Unverified | Codex-managed; reproducible cache conflict |
+| CodeRabbit 1.1.4 skill package | No persistent CLI plugin installation established | Supplied | Unverified | Session/plugin owner; standalone CLI is a separate tool |
+| Codex Security 0.1.31 skill package | No persistent CLI plugin installation established | Supplied | Unverified | Session/plugin owner; source audit has host/native limitations |
+| plugin-management 0.1.0 | No persistent CLI plugin installation established | Supplied | Unverified | Session/plugin owner |
+| work-pets 0.1.6 | No persistent CLI plugin installation established | Supplied | Unverified | Session/plugin owner; uploaded assets need task authorization |
+
+The WSL VS Code extension reports `openai.chatgpt@26.917.62051`; an extension
+version is not proof of its complete skill catalog. Session-supplied capabilities
+and cached packages do not imply persistent CLI plugin installation. The earlier
+remote marketplace lookup returned HTTP 503; no complete remote catalog is claimed.
+Do not install session-only plugins merely to make the tables match. Decide which
+capabilities are needed in each client, use supported provisioning, then verify
+that client's own discovery in a fresh conversation. Windows-local observations
+remain an explicit inventory gap.
+
+#### Runtime and audit notes
+
+Playwright CLI 0.1.22 uses playwright/core 1.64.0-alpha-1790635538000. Its required
+Chromium 1247 was missing; the user-approved install supplied Chrome for Testing
+155.0.8059.12 and matching headless shell. The installer also garbage-collected
+unused Chromium 1237; this was not a CLI package update. Loopback fixtures checked
+interaction, synthetic state save/load, named-session cleanup and external-browser
+detach/reconnection. These checks do not exercise production sites or accounts.
+
+The expanded risk-based static audit includes skill instructions, helpers and
+available bundled plugin implementation, including decoded JavaScript. It found
+two LOW local integrity issues involving pre-created shared temporary directories
+(documentation cache and temporary security artifacts). The canonical report
+records exact evidence. Native host/service implementation and inherited MCP
+write authority remain unverified; a local read-only profile does not prove all
+MCP tools are read-only. System/plugin source was not patched. Prefer private
+persistent artifact storage and use the documentation helper's supported
+`--cache-dir` with a verified owner-private directory. See the skills repository
+maintenance guidance for boundaries and follow-up.
 
 ### MCP servers
 

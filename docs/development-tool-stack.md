@@ -184,7 +184,7 @@ Windows-specific tests from PowerShell 7 on the Windows host.
 | check-jsonschema | 0.37.4 | Schema validation for Compose and GitHub issue YAML |
 | jq | 1.7.1 | JSON queries and syntax validation |
 | Mike Farah `yq` | 4.53.3 | Native YAML queries and edits using `yq eval` syntax |
-| Mermaid CLI (`mmdc`) | 11.17.0 installed; 11.16.0 repository pin | Validates Mermaid files and exports SVG, PNG, or PDF |
+| Mermaid CLI (`mmdc`) | 12.0.0 installed; 11.16.0 repository pin | Validates Mermaid files and exports SVG, PNG, or PDF |
 
 Common direct checks include:
 
@@ -477,9 +477,11 @@ materialized its copy again. Its unchanged entrypoint was discoverable in a
 throwaway repo, so a frontmatter failure is not supported by the reproducer.
 
 Keep system maintenance through Codex. Do not patch `.system`, its marker, or
-add a personal duplicate. The local skills repository contains a prepared
+add a personal duplicate. The local skills repository contains the submitted
 upstream report, evidence and a reproduction procedure in
-`docs/plugin-creator-cache-refresh.md`; no upstream issue has been submitted.
+`docs/plugin-creator-cache-refresh.md`; the related reproduction is posted on
+[Codex issue #19265](https://github.com/openai/codex/issues/19265#issuecomment-5899517948).
+A shared root cause and an upstream fix remain unconfirmed.
 
 The personal `context7-mcp` entrypoint was byte-for-byte identical to the plugin
 entrypoint. After verifying plugin discovery and a successful documentation lookup,
@@ -559,10 +561,14 @@ two LOW local integrity issues involving pre-created shared temporary directorie
 (documentation cache and temporary security artifacts). The canonical report
 records exact evidence. Native host/service implementation and inherited MCP
 write authority remain unverified; a local read-only profile does not prove all
-MCP tools are read-only. System/plugin source was not patched. Prefer private
-persistent artifact storage and use the documentation helper's supported
-`--cache-dir` with a verified owner-private directory. See the skills repository
-maintenance guidance for boundaries and follow-up.
+MCP tools are read-only. System/plugin source was not patched. Local mitigations now use a checked private
+manual-cache wrapper at `$HOME/.local/share/codex-hardening/fetch-manual-private.py`
+and personal instructions requiring persistent inline supplemental artifacts.
+Temporary saves and `sourcePath` imports remain prohibited until the actual
+plugin process has a verified private temporary parent. Eight wrapper checks and
+an official manual fetch passed; this does not reproduce a multiuser attack or
+fix the upstream implementations. See the skills repository maintenance guidance
+for boundaries and follow-up.
 
 ### MCP servers
 

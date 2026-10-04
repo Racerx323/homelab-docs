@@ -330,6 +330,11 @@ outside the filesystem sandbox. No Copilot model request was made.
 
 ### Headroom optimization and managed integrations
 
+See [ExtraHeadroom in Ubuntu WSL2](extraheadroom-wsl2.md) for installation,
+updates, configuration ownership, operating procedures, and separate readiness,
+routing, and savings checks. That guide distinguishes the intended Windows and
+Ubuntu roles from the behavior qualified by the observations below.
+
 Headroom's Ubuntu-managed integration records and Codex registration were checked
 on October 4. Desktop integration status and Codex plugin installation are
 separate observations; Chisle appears in both inventories.

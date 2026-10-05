@@ -344,6 +344,7 @@ separate observations; Chisle appears in both inventories.
 | Headroom MCP | 0.39.0 | Desktop-managed runtime; user-level Codex MCP registration; compression, retrieval, and statistics tools supplied in the VS Code session |
 | RTK | 0.48.0 | Desktop-managed binary; managed shell PATH and workspace instructions select compact shell-command output |
 | Codebase Memory MCP | 0.11.0 | Desktop-managed binary; enabled integration and user-level Codex MCP registration; graph, architecture, outline, and snippet tools supplied in the VS Code session |
+| Serena MCP | 1.7.0 (`serena-agent`) | Headroom-managed Python environment; user-level Codex MCP registration; symbol navigation, targeted source reads, and symbol editing |
 | Chisle | 3.7.0 | Enabled desktop integration and installed Codex plugin; efficiency mode, audit, review, and help skills |
 
 Chisle's desktop record selects `latest`; the installed Codex plugin version is
@@ -374,6 +375,145 @@ the audit also generated requests, so the entire counter increase is not assigne
 to the test. MCP availability, generated instructions, guard trust, and healthy
 proxy endpoints are separate checks; successful model routing requires request
 evidence. Token compression does not establish a subscription billing reduction.
+
+### Serena installation and WSL IPv4 workaround
+
+[Serena](https://github.com/oraios/serena) provides language-server-backed symbol
+tools, including `get_symbols_overview`, `find_symbol`, and
+`find_referencing_symbols`, plus symbol editing tools. It can read a selected
+function body instead of a whole file. The settled workspace workflow remains
+vexp first for orientation and Codebase Memory second for unresolved structural
+questions; Serena adds targeted symbol inspection and editing capabilities.
+
+On October 4, Headroom installed `serena-agent` 1.7.0 in
+`$HOME/.local/share/Headroom/headroom/serena-venv`. Ubuntu's user-level Codex
+registration selects that environment's `bin/serena` executable with
+`start-mcp-server`, `--project-from-cwd`, `--context codex`, and
+`--open-web-dashboard False`. Project detection uses the nearest ancestor with
+`.serena/project.yml` or `.git`; the dashboard flag suppresses automatic browser
+opening. Installation, registration, executable launch, and dependency checks
+passed. Serena tools were not supplied to the installation conversation, so an
+end-to-end MCP symbol query was not exercised.
+
+The initial Headroom installation stalled while its pip subprocess waited on an
+IPv6 connection to PyPI. It used `--timeout 180 --retries 10` and remained active
+after ten minutes. A forced IPv4 request to the same package endpoint returned
+HTTP 200 in about 0.09 seconds; a forced IPv6 connection timed out after five
+seconds. Compare both paths when diagnosing this symptom:
+
+```bash
+curl -4 --silent --show-error --output /dev/null \
+    --connect-timeout 5 --max-time 10 \
+    --write-out 'IPv4: HTTP %{http_code}, seconds %{time_total}\n' \
+    https://pypi.org/simple/serena-agent/
+curl -6 --silent --show-error --output /dev/null \
+    --connect-timeout 5 --max-time 10 \
+    --write-out 'IPv6: HTTP %{http_code}, seconds %{time_total}\n' \
+    https://pypi.org/simple/serena-agent/
+```
+
+The approved workaround changed `/etc/gai.conf` to prefer IPv4 while keeping
+IPv6 enabled and retaining the other default precedence entries. This affects
+Ubuntu applications that use the system address-selection policy, beyond Serena.
+It works around the observed connection failure; the underlying IPv6
+reachability problem was not diagnosed.
+
+For a future installation with the same confirmed symptom, obtain approval for
+that Ubuntu-wide change, retain a protected pre-edit rollback copy, and review
+any existing active precedence rules before editing with `sudoedit /etc/gai.conf`.
+This installation had no active rules beforehand. The applied table is:
+
+```text
+precedence ::1/128 50
+precedence ::/0 40
+precedence 2002::/16 30
+precedence ::/96 20
+precedence ::ffff:0:0/96 100
+```
+
+The owner ran a guarded helper with interactive sudo authentication. It checked
+the approved original and proposed contents, preserved ownership and permissions,
+and verified that a fresh Serena Python process preferred IPv4 and reached PyPI
+with TLS verification. It then sent SIGTERM only to the stalled pip installer
+after matching its command, owner, and Headroom parent. Headroom stayed running;
+Serena installation and Codex registration subsequently completed.
+
+After changing the policy, verify address ordering in a fresh process. Stop only
+a positively identified stale Serena pip subprocess, then inspect Headroom's
+result before retrying the add-on. Avoid a second concurrent installer. Check
+the completed installation with:
+
+```bash
+"$HOME/.local/share/Headroom/headroom/serena-venv/bin/serena" --help
+"$HOME/.local/share/Headroom/headroom/serena-venv/bin/python3" -m pip check
+```
+
+Both commands exited successfully; pip reported `No broken requirements found`.
+To undo the address preference, restore the verified pre-edit configuration,
+reviewing any intervening changes first. The temporary helper and rollback copy
+from this installation are session evidence, not permanent recovery tools.
+
+### Codebase Memory indexing and agent workflow
+
+Codebase Memory is registered in Ubuntu's `$HOME/.codex/config.toml` with the
+Headroom-managed executable
+`$HOME/.local/share/Headroom/headroom/bin/codebase-memory-mcp` and
+`CBM_CACHE_DIR=$HOME/.local/share/Headroom/headroom/tools/codebase-memory-cache`.
+Use that cache explicitly for CLI configuration commands so they address the
+same settings and indexes as the MCP server.
+
+On October 4, the managed CLI's `config list` confirmed these effective settings:
+
+| Setting | Effective value | Purpose |
+| --- | --- | --- |
+| `auto_index` | `true` | Initially indexes a new project when an MCP session connects |
+| `auto_index_limit` | `50000` | Maximum file count for automatic initial indexing |
+| `auto_watch` | `true` | Registers the connecting session's project with the background watcher |
+| `watcher_enabled` | `true` | Enables the background watcher subsystem |
+
+The owner enabled `auto_index`; the watcher settings retain their enabled
+defaults. To enable automatic initial indexing and inspect the effective
+configuration in the Headroom cache:
+
+```bash
+CBM_CACHE_DIR="$HOME/.local/share/Headroom/headroom/tools/codebase-memory-cache" \
+    "$HOME/.local/share/Headroom/headroom/bin/codebase-memory-mcp" \
+    config set auto_index true
+
+CBM_CACHE_DIR="$HOME/.local/share/Headroom/headroom/tools/codebase-memory-cache" \
+    "$HOME/.local/share/Headroom/headroom/bin/codebase-memory-mcp" \
+    config list
+```
+
+Automatic initial indexing applies to the detected project on session connection;
+it does not promise to discover every sibling repository under `$HOME/code`.
+Existing manually created indexes remain available after enabling `auto_index`
+and do not require a blanket reindex. The background watcher detects Git
+working-tree changes and updates registered projects incrementally while running.
+These settings were verified; an edit-to-index update was not exercised for every
+repository. If an index appears stale, request a refresh through
+`index_repository`, then inspect `index_status` and `check_index_coverage`.
+Automatic indexing still respects exclusions and can report parsing gaps.
+
+The shared `$HOME/code/AGENTS.md` defines the agent handoff: use vexp first for
+orientation when discovery is needed, and skip orientation when the task already
+identifies the files or symbols. Use Codebase Memory second for unresolved
+structural questions about callers, dependencies, call paths, or architecture,
+or when vexp is unavailable, degraded, or returns no useful pivots. Do not repeat
+discovery that vexp has already answered adequately.
+
+Select the Codebase Memory project matching the repository; query each relevant
+project for cross-repository work. Use `search_graph` for symbols, `trace_path`
+for relationships, and `get_architecture` for broader structure. Check coverage
+for files relied on, and read source directly where coverage is incomplete or
+freshness is uncertain. Use direct searches for literal strings, configuration,
+and excluded files. Current source is authoritative when either index disagrees;
+retain vexp completion checks and required repository tests.
+
+See the upstream [Codebase Memory configuration guide](https://github.com/DeusData/codebase-memory-mcp/blob/main/docs/CONFIGURATION.md)
+for setting defaults and daemon lifecycle details, and its
+[tool documentation](https://github.com/DeusData/codebase-memory-mcp#tools)
+for indexing and graph queries.
 
 ### vexp indexing and IDE integration
 
@@ -598,6 +738,7 @@ capabilities supplied to the active VS Code conversation are separate observatio
 | Sites 1.0.0-b | Plugin installed/enabled; skill not in local discovery | Skill supplied | Plugin installed/enabled; skill not in local discovery |
 | Chisle 3.7.0 | Plugin installed/enabled; four skills discovered | Four skills supplied | Plugin not installed; skills not discovered |
 | Headroom / Codebase Memory MCP | Both user-level registrations present | Tools supplied; Headroom routing separately verified | Headroom MCP registered; Codebase Memory absent; no Headroom model provider selected |
+| Serena MCP | 1.7.0 installed; user-level registration and launch checks passed | Not supplied in the installation conversation; MCP symbol queries not tested | Not checked for Serena |
 | OpenAI Templates 0.1.1 | Plugin installed/enabled | Not supplied | Plugin installed/enabled |
 | GitHub / Mintlify MCP | Plugins installed/enabled | Connector tools supplied | Plugins installed/enabled; callable tools not tested |
 | Windows user-scoped skills | Not discovered | Not supplied | Seven enabled entries listed above |
@@ -626,6 +767,7 @@ the actual plugin process has a verified owner-private temporary parent.
 | Context7 | Context7 plugin and global remote-server registration | Current, version-specific library, framework, SDK, API, CLI, and cloud-service documentation |
 | Headroom | Desktop-managed runtime 0.39.0 and user-level Codex registration | Local compression, retrieval, and statistics tools; model proxy routing is configured separately |
 | Codebase Memory | Desktop-managed binary 0.11.0 and user-level Codex registration | Repository graph indexing and queries, architecture views, file outlines, and code snippets |
+| Serena | Headroom-managed `serena-agent` 1.7.0 environment and user-level Codex registration | Language-server-backed symbol navigation, selected function reads, and symbol editing |
 
 Context7 exposes `resolve-library-id` and `query-docs`. Resolve a library name
 before querying its documentation unless the request already supplies an exact
@@ -644,7 +786,7 @@ GitHub state; review the requested scope before approving write operations.
 | Codex primary agent | Codex session | Performs the requested repository work under the active sandbox and approval policy |
 | Codex sub-agents | Created on demand within a Codex session | Handle explicitly delegated, bounded work in parallel; they share the workspace and do not represent persistent named agents |
 | Personal Codex instructions | `$HOME/.codex/AGENTS.md` | Apply personal defaults across workspaces |
-| Development-workspace instructions | `$HOME/code/AGENTS.md` | Apply shared development rules, including Context7, vexp, Podman, and shell-formatting policy |
+| Development-workspace instructions | `$HOME/code/AGENTS.md` | Apply shared development rules, including Context7, the vexp-first and Codebase Memory-second workflow, Podman, and shell-formatting policy |
 | Repository instructions | Repository or nested `AGENTS.md` files | Add repository-specific validation, review, and safety rules; the closest applicable file governs its subtree |
 | CodeRabbit | `.coderabbit.yaml` plus the CodeRabbit service | Reviews ready pull requests and skips drafts unless review is requested manually |
 | GitHub Actions | `.github/workflows/` | Runs baseline validation, LikeC4 and Mermaid checks, and repository-governance auditing |

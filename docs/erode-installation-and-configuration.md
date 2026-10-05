@@ -541,6 +541,88 @@ Periodically review:
 
 ## Troubleshooting
 
+### Gemini returns HTTP 503 / `UNAVAILABLE`
+
+On October 5, 2026, `homelab-dns` run `37349835869`, attempts 1, 2, and 3,
+failed with Gemini HTTP 503, `UNAVAILABLE`, and a high-demand message.
+This establishes a provider availability failure. It does not establish bad
+credentials, exhausted quota, or an invalid model. No configuration defect
+was established by this inspection.
+
+The inspected workflow selects Gemini and sets both
+`ERODE_GEMINI_ADVANCED_MODEL` and `ERODE_GEMINI_FAST_MODEL` to
+`gemini-3.1-flash-lite`. Erode recognizes both environment variables, and
+[Google documents that model](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite).
+The model repository, path, ref, secret input, and advisory policy remain
+unchanged. The workflow has a 15-minute job limit and cancels superseded runs.
+The limit bounds execution; it does not repair provider availability.
+
+The action SHA does not pin its container image. The inspected
+[action implementation](https://github.com/erode-app/erode/blob/df0f47b88be6f3cc6abdf8ce0298dd084ec15a59/action.yml)
+uses `ghcr.io/erode-app/erode:0`. All three attempts pulled index digest
+`sha256:eafa49e0e9d18281c7c9121b48457ac64cef1ec90fe139db074e08229df3defc`.
+Its Linux AMD64 image reports version `0.11.0` and source revision
+`f63b5b6408cb68dec24efe1c0ee45ada2422a051`. A future run can resolve the
+same tag to a different runtime, even with the action SHA unchanged.
+
+The timeout change was merged through `homelab-dns` PR #9 as commit
+`e98b7f4419e1914557cdc4a217457dd11fd743a1`. Its pull-request check,
+run `37356105663`, succeeded at 18:28 UTC on October 5, 2026 with the same
+image digest and zero violations. It reported zero source files after
+filtering the workflow-only diff. This confirms a later successful provider
+response for that narrower check; it does not verify sustained availability
+or retry recovery. No new findings comment was observed, consistent with
+Erode's clean-result comment cleanup. Posting a findings comment was not
+exercised. A separate secret-free sleep probe, run `37357439518`, exercised
+the actual 15-minute job limit. GitHub cancelled it with an explicit
+maximum-execution-time annotation and terminated the orphaned sleep process.
+Job completion took 15 minutes 19 seconds including runner overhead.
+
+The verified image code has two retry layers relevant to this failure:
+
+- Erode's [provider retry predicate](https://github.com/erode-app/erode/blob/f63b5b6408cb68dec24efe1c0ee45ada2422a051/packages/core/src/providers/base-provider.ts)
+  allows rate limits and timeouts, with two retries and jittered delays of
+  250–500 ms and 500–1000 ms. It excludes HTTP 503.
+- The image revision's lockfile selects `@google/genai` `2.23.0`.
+  Erode's [Gemini provider](https://github.com/erode-app/erode/blob/f63b5b6408cb68dec24efe1c0ee45ada2422a051/packages/core/src/providers/gemini/provider.ts)
+  supplies neither `httpOptions.retryOptions` nor a request timeout.
+  The [SDK retry implementation](https://github.com/googleapis/js-genai/blob/v2.23.0/src/_api_client.ts)
+  makes one attempt when retry options are absent. Its five-attempt
+  default applies only when retry options are supplied. Erode recognizes
+  `ERODE_GEMINI_TIMEOUT`, but this provider does not forward that setting.
+
+There is no supported retry action input or Erode environment setting in this
+runtime. Adding an invented retry variable would have no effect.
+[Google recommends bounded exponential backoff](https://ai.google.dev/gemini-api/docs/troubleshooting)
+for transient failures. The preferred reliability proposal is to configure
+request-level SDK retries upstream: three total attempts, 30- and 60-second
+delays, a 60-second timeout per attempt, and HTTP 503 as the retryable response
+status. Permanent authentication, configuration, and model errors must fail
+immediately; cancellation and the total job limit must still stop execution.
+Validate those cases with mocked requests before adopting a reviewed release.
+This proposal is not implemented in the current workflow.
+
+Offline tests of the actual bundled SDK confirmed recovery after two 503s,
+bounded exhaustion, and no retries for permanent 400/401/403/404 responses.
+However, cancellation during backoff waited about 30 seconds before returning.
+An interruptible backoff path is needed before adopting the SDK retry proposal.
+
+A whole-action wrapper could retry a structured Gemini 503 failure without
+upgrading Erode. It would require replacing the current action invocation or
+maintaining a local container action, and it could repeat completed analysis,
+increase provider cost, and complicate cancellation. Broad retries of every
+nonzero exit would also repeat permanent failures. No wrapper, model/provider
+switch, or action upgrade was introduced by this inspection.
+
+Keep provider errors visible even while findings are advisory:
+`fail-on-violations: "false"` does not turn provider failures into success.
+Do not rotate credentials or change the Doppler integration to address a 503.
+The architecture key remains scoped to `homelab-dev/ci/ci_architecture` and
+the `homelab-dns` Actions secret. Do not recreate retired governance credentials.
+Further live AI probes and workflow reruns require separate authorization.
+Request-level retries remain a proposal, and a successful workflow-only check
+does not validate architecture drift detection for a DNS source change.
+
 ### `erode: command not found`
 
 Confirm the default NVM environment and global package installation:

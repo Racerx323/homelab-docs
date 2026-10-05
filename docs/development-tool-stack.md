@@ -392,8 +392,9 @@ registration selects that environment's `bin/serena` executable with
 `--open-web-dashboard False`. Project detection uses the nearest ancestor with
 `.serena/project.yml` or `.git`; the dashboard flag suppresses automatic browser
 opening. Installation, registration, executable launch, and dependency checks
-passed. Serena tools were not supplied to the installation conversation, so an
-end-to-end MCP symbol query was not exercised.
+passed. After the Python language-server dependency was configured, a fresh MCP
+process reported `ready` and a read-only symbol query succeeded. The existing
+connection also returned symbols after the project context was refreshed.
 
 The initial Headroom installation stalled while its pip subprocess waited on an
 IPv6 connection to PyPI. It used `--timeout 180 --retries 10` and remained active
@@ -452,6 +453,58 @@ Both commands exited successfully; pip reported `No broken requirements found`.
 To undo the address preference, restore the verified pre-edit configuration,
 reviewing any intervening changes first. The temporary helper and rollback copy
 from this installation are session evidence, not permanent recovery tools.
+
+#### Serena Python language-server dependencies
+
+Serena's Python backend uses Pyright, provisioned through `uvx`. The `uv`
+installation supplies both `uv` and `uvx`; `uvx` is the tool-running interface
+equivalent to `uv tool run`. Both installed binaries reported version 0.12.23
+on October 4 and live under `$HOME/.local/bin`.
+
+The initial Python activation failed because neither `uvx` nor `uv` could be
+found. The owner installed them with Astral's standalone installer, selecting
+the user-local directory without modifying shell profiles:
+
+```bash
+curl -4 -LsSf https://astral.sh/uv/install.sh |
+    env UV_INSTALL_DIR="$HOME/.local/bin" UV_NO_MODIFY_PATH=1 sh
+
+"$HOME/.local/bin/uv" --version
+"$HOME/.local/bin/uvx" --version
+```
+
+Ubuntu's `$HOME/.codex/config.toml` explicitly selects the installed runner for
+Serena, so it does not depend on the MCP process's inherited PATH:
+
+```toml
+[mcp_servers.serena.env]
+UVX = "/home/aaron/.local/bin/uvx"
+```
+
+For the activated `homelab-server-configs` project, `.serena/project.yml`
+contains this language-server selection:
+
+```yaml
+language_servers: ["python"]
+```
+
+The `python` entry selects Pyright. Review each repository's languages before
+reusing this setting; it does not configure servers for every language in a
+mixed repository. Serena's dependency provider fetches and caches its pinned
+Pyright package through `uvx`, outside the Headroom-managed Serena environment.
+
+A running MCP process may retain a previous startup failure. Load the saved
+environment in a fresh Serena process, or refresh the project context after the
+runner becomes available. Qualification succeeded in both a fresh process using
+the saved `UVX` setting and the existing connection: `get_symbols_overview` read
+`Webmin/tests/test_disk_discovery_candidate.py` and returned its constants and
+`DiskDiscoveryTests` class. No source files were edited and onboarding remained
+unperformed. Verify language-server status and an actual symbol query, rather
+than relying only on executable version or pip dependency checks.
+
+See [uv installation](https://docs.astral.sh/uv/getting-started/installation/)
+and [Serena configuration](https://oraios.github.io/serena/02-usage/050_configuration.html)
+for supported installation methods and language-server settings.
 
 ### Codebase Memory indexing and agent workflow
 
@@ -738,7 +791,7 @@ capabilities supplied to the active VS Code conversation are separate observatio
 | Sites 1.0.0-b | Plugin installed/enabled; skill not in local discovery | Skill supplied | Plugin installed/enabled; skill not in local discovery |
 | Chisle 3.7.0 | Plugin installed/enabled; four skills discovered | Four skills supplied | Plugin not installed; skills not discovered |
 | Headroom / Codebase Memory MCP | Both user-level registrations present | Tools supplied; Headroom routing separately verified | Headroom MCP registered; Codebase Memory absent; no Headroom model provider selected |
-| Serena MCP | 1.7.0 installed; user-level registration and launch checks passed | Not supplied in the installation conversation; MCP symbol queries not tested | Not checked for Serena |
+| Serena MCP | 1.7.0 installed; user-level registration; explicit `UVX` setting | Tools supplied after installation; Python symbol query passed | Not checked for Serena |
 | OpenAI Templates 0.1.1 | Plugin installed/enabled | Not supplied | Plugin installed/enabled |
 | GitHub / Mintlify MCP | Plugins installed/enabled | Connector tools supplied | Plugins installed/enabled; callable tools not tested |
 | Windows user-scoped skills | Not discovered | Not supplied | Seven enabled entries listed above |
@@ -823,6 +876,8 @@ verification, rotation, and revocation procedures.
 | --- | --- | --- |
 | Python | 3.12.3 | pre-commit, yamllint, and Python-based CLI tooling |
 | pipx | 1.4.3 | Isolated installation of check-jsonschema and Ansible Core |
+| uv | 0.12.23 | Python package, runtime, and tool management; supplies Serena's external language-server dependency runner |
+| uvx | 0.12.23 (bundled with uv) | Runs isolated Python tools, including Serena's Pyright language server |
 | Node.js | 26.4.0 | Markdown and AI CLI tools |
 | npm | 12.2.0 | User-level global Node package installation |
 | Go | 1.26.8 | User-level installation of Go CLIs such as `yq` |
@@ -852,9 +907,9 @@ and managed integration records are:
 | Global npm under NVM | Copilot, LikeC4, Mermaid CLI, Erode, vexp, markdownlint-cli2, markdown-link-check |
 | pipx | check-jsonschema, Ansible Core |
 | Go build in `~/.local/bin` | Mike Farah yq v4, actionlint |
-| User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs |
+| User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs; uv and uvx through Astral's standalone installer |
 | Snap | Ollama 0.34.0, published as `mz2` |
-| Ubuntu `.deb` plus desktop-managed artifacts | ExtraHeadroom Desktop; self-contained Headroom Python runtime, RTK, Codebase Memory, and Chisle integration |
+| Ubuntu `.deb` plus desktop-managed artifacts | ExtraHeadroom Desktop; self-contained Headroom Python runtime, Serena environment, RTK, Codebase Memory, and Chisle integration |
 
 Avoid similarly named packages from unrelated projects, especially the
 Python/jq-wrapper package named `yq`.

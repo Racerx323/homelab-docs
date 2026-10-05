@@ -12,9 +12,6 @@ profiles:
   baseline:
     required_workflows:
       - .github/workflows/validation.yml
-  bats:
-    required_workflows:
-      - .github/workflows/bash-tests.yml
   architecture:
     required_workflows:
       - .github/workflows/architecture-drift.yml
@@ -35,10 +32,6 @@ profiles:
       - .github/workflows/terraform.yml
 
 repositories:
-  bash-bcs-workspace:
-    default_branch: master
-    visibility: private
-    profiles: [baseline, bats]
   frame-and-sample:
     default_branch: main
     visibility: public

@@ -29,10 +29,7 @@ GitHub CLI credential store
              |
              +-- gh auth token -> ERODE_GITHUB_TOKEN for one Erode process
 
-Doppler homelab-dev, environment github
-             |
-             +-- ci_governance -> homelab-docs
-             |                    REPOSITORY_AUDIT_TOKEN
+Doppler homelab-dev, environment ci
              |
              +-- ci_architecture -> homelab-dns
                                   ERODE_GEMINI_API_KEY
@@ -42,8 +39,8 @@ This separation is intentional:
 
 - Doppler manages third-party API keys and other development secrets.
 - GitHub CLI continues to manage interactive local GitHub credentials.
-- A separate least-privilege GitHub PAT for CI is stored in Doppler and synced
-  to GitHub Actions; it is never derived from the GitHub CLI OAuth token.
+- The architecture API key is stored in Doppler and synced to GitHub Actions.
+  Governance audits use the workflow's read-only GitHub token.
 - Non-secret settings remain in normal configuration files.
 - Secrets are not loaded globally by `.bashrc`, `.profile`, or an interactive
   shell.
@@ -73,19 +70,20 @@ Doppler organizes secrets as projects and configs. The `homelab-dev` project
 is the shared boundary for development tooling. The default `dev_personal`
 space keeps personal values separate from shared defaults and other users.
 
-The deployed project layout is:
+The project layout required by the current consumers is:
 
 | Environment | Configs | Purpose |
 | --- | --- | --- |
 | Development | `dev`, `dev_personal` | Shared development defaults and personal development credentials |
 | Staging | `stg` | Staging credentials and configuration |
 | Production | `prd` | Production credentials and configuration |
-| `github` | `ci`, `ci_architecture`, `ci_governance` | Common CI metadata and consumer-specific GitHub Actions credentials |
+| `ci` | `ci`, `ci_architecture` | Common CI metadata and consumer-specific GitHub Actions credentials |
 
-The lowercase `github` environment is intentionally separate from Development,
+The lowercase `ci` environment is intentionally separate from Development,
 Staging, and Production. Its `ci` root contains only Doppler metadata.
-`ci_architecture` syncs only to `homelab-dns`, while `ci_governance` syncs only
-to `homelab-docs`.
+`ci_architecture` syncs only to `homelab-dns`. Governance audits require no
+Doppler credential sync. Retired configs and syncs may still exist until live
+cleanup is performed; this guide does not establish their removal.
 
 In the Doppler dashboard:
 
@@ -121,14 +119,9 @@ The GitHub CI configs have separate inventories:
 | Variable | Store | Purpose |
 | --- | --- | --- |
 | `ERODE_GEMINI_API_KEY` | Doppler `homelab-dev/ci_architecture` | Gemini credential used by the `homelab-dns` architecture-drift workflow |
-| `REPOSITORY_AUDIT_TOKEN` | Doppler `homelab-dev/ci_governance` | Read-only access to private `bash-bcs-workspace` during governance audits |
 | `DOPPLER_PROJECT` | Doppler integration metadata | Identifies `homelab-dev` at the GitHub sync target |
-| `DOPPLER_ENVIRONMENT` | Doppler integration metadata | Identifies the `github` environment |
+| `DOPPLER_ENVIRONMENT` | Doppler integration metadata | Identifies the `ci` environment |
 | `DOPPLER_CONFIG` | Doppler integration metadata | Identifies the synchronized branch config |
-
-`REPOSITORY_AUDIT_TOKEN` is a fine-grained GitHub PAT restricted to Contents
-and Metadata read access for only `bash-bcs-workspace`. It must not have write,
-administration, workflow, issue, or pull-request permissions.
 
 ## Install the Doppler CLI in WSL
 
@@ -392,38 +385,22 @@ wrapper invoke only the tool that requires a credential.
 Local CLI authentication is for interactive development only. Never copy the
 local Doppler CLI token into a repository or reuse it as a CI credential.
 
-GitHub Actions use two deployed Doppler GitHub integration syncs:
+The architecture workflow uses the Doppler GitHub integration to sync
+`ERODE_GEMINI_API_KEY` from `ci_architecture` to the `homelab-dns` repository's
+Actions secrets. It passes the key to Erode's `gemini-api-key` action input.
+Doppler stores the source value; GitHub stores the encrypted execution copy.
 
-1. `ci_governance` syncs `REPOSITORY_AUDIT_TOKEN` to the `homelab-docs`
-   repository's Actions secrets.
-2. `ci_architecture` syncs `ERODE_GEMINI_API_KEY` to the `homelab-dns`
-   repository's Actions secrets.
-3. The governance workflow uses `secrets.REPOSITORY_AUDIT_TOKEN` as `GH_TOKEN` and falls
-   back to `github.token` when the secret is unavailable.
-4. The architecture workflow passes `secrets.ERODE_GEMINI_API_KEY` to Erode's
-   `gemini-api-key` action input.
-5. The audit token grants read access only to the private repository that the default
-   workflow token cannot clone.
+The governance workflow audits public repositories using `github.token` as
+`GH_TOKEN`. It requires neither a separate PAT nor a Doppler service token.
+Continue to restrict workflow permissions, pin third-party actions to full
+commit SHAs, and avoid exposing secrets to workflows from untrusted forks.
 
-The integration pushes an encrypted execution copy to GitHub; the workflow does
-not retrieve the PAT from Doppler at runtime. Do not add a Doppler service token
-or run the governance job through `doppler run`. Continue to restrict workflow
-permissions, pin third-party actions to full commit SHAs, and avoid exposing
-secrets to workflows from untrusted forks.
-
-Local `dev_personal`, the `github` environment's consumer-specific configs,
+Local `dev_personal`, the `ci` environment's consumer-specific configs,
 staging, and production must remain separate credential boundaries.
 
 Inspect the CI inventory without displaying values:
 
 ```bash
-doppler secrets \
-  --project homelab-dev \
-  --config ci_governance \
-  --only-names
-
-gh secret list --repo Racerx323/homelab-docs
-
 doppler secrets \
   --project homelab-dev \
   --config ci_architecture \
@@ -432,8 +409,8 @@ doppler secrets \
 gh secret list --repo Racerx323/homelab-dns
 ```
 
-See [GitHub Actions Governance](github-actions-governance.md) for PAT creation,
-workflow verification, rotation, revocation, and incident response.
+See [GitHub Actions Governance](github-actions-governance.md) for governance
+workflow permissions and verification.
 
 ## Verification checklist
 
@@ -457,8 +434,6 @@ doppler secrets \
 gh auth status
 
 # CI secret names and synchronized GitHub target, without values.
-doppler secrets --project homelab-dev --config ci_governance --only-names
-gh secret list --repo Racerx323/homelab-docs
 doppler secrets --project homelab-dev --config ci_architecture --only-names
 gh secret list --repo Racerx323/homelab-dns
 
@@ -486,12 +461,8 @@ Also verify that secret values are absent from:
 Prefer a short overlap where both keys work, then revoke the old key after
 verification. Updating Doppler does not revoke the original provider key.
 
-For `REPOSITORY_AUDIT_TOKEN`, create the replacement in GitHub first, update
-the value in project `homelab-dev`, environment `github`, config
-`ci_governance`, wait for
-the GitHub Actions sync, run the governance audit, and then revoke the old PAT.
-Confirm the audit log reports zero policy violations. Emergency exposure
-requires immediate revocation and replacement rather than an overlap window.
+Emergency exposure requires immediate revocation and replacement rather than an
+overlap window.
 
 If a secret may have entered Git history or terminal logs, rotate it. Removing
 the text alone does not make the old credential safe.
@@ -589,7 +560,7 @@ provider credentials. Revoke or delete those separately when appropriate.
 5. Use Erode manually until results and provider cost are understood.
 6. Add the manual pre-commit hook to selected repositories.
 7. Promote it to pre-push only when reliable enough to block pushes.
-8. Keep CI credentials in the separate `github` environment and `ci` config;
+8. Keep CI credentials in the separate `ci` environment and its consumer configs;
    synchronize them through the reviewed GitHub Actions integration.
 
 ## References

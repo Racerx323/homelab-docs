@@ -159,8 +159,7 @@ The shared development workflow includes:
 - **Infrastructure:** Terraform, TFLint, and terraform-docs.
 - **Architecture:** LikeC4 formatting and validation, with manual advisory
   Erode drift analysis.
-- **AI-assisted development:** Codex, Copilot, CodeRabbit, BCS with Ollama, and
-  vexp.
+- **AI-assisted development:** Codex, Copilot, CodeRabbit, and vexp.
 - **Secrets:** Doppler provides command-scoped provider credentials;
   GitHub CLI remains the GitHub credential source.
 - **Windows testing:** PowerShell 7 and Pester, with Pester 5 authoritative in

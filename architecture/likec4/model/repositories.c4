@@ -14,7 +14,7 @@ model {
     }
     dnsRepo = repository "homelab-dns" {
       #repository #homelab
-      description "Highly available Pi-hole, Unbound, and Keepalived DNS configuration."
+      description "Highly available Pi-hole, Unbound, and Keepalived DNS configuration, plus the Nebula-Sync installer."
       link https://github.com/Racerx323/homelab-dns "GitHub"
     }
     notificationRepo = repository "homelab-notification" {
@@ -47,10 +47,6 @@ model {
       description "Terraform configurations for VMs, networks, and related infrastructure."
       link https://github.com/Racerx323/homelab-terraform "GitHub"
     }
-    nebulaWorkspace = repository "bash-bcs-workspace / nebula-sync" {
-      #repository #homelab
-      description "Debian build, installer, systemd service, and timers for Nebula-Sync."
-    }
     mediaRepo = repository "frame-and-sample" {
       #repository #optional
       description "Independent knowledge base for live video production, capture, audio, NDI, OBS, and Wirecast."
@@ -70,7 +66,6 @@ model {
   portfolio.terraformRepo -[provisions]-> portfolio.serverConfigsRepo "provides infrastructure for"
   portfolio.serverConfigsRepo -[configures]-> portfolio.observabilityRepo "hosts and configures workloads"
   portfolio.scriptsRepo -[uses]-> portfolio.notificationRepo "sends WSL sync notifications"
-  portfolio.nebulaWorkspace -[synchronizes]-> portfolio.dnsRepo "synchronizes Pi-hole peers"
   portfolio.networkRepo -[hosts]-> portfolio.dnsRepo "provides network connectivity"
   portfolio.networkRepo -[hosts]-> portfolio.observabilityRepo "provides network connectivity"
   portfolio.networkRepo -[hosts]-> portfolio.notificationRepo "provides network connectivity"

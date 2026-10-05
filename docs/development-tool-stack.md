@@ -311,8 +311,6 @@ authorization boundary.
 | Codex CLI | 0.160.0 (WSL, October 4) | Repository-aware implementation and troubleshooting |
 | GitHub Copilot CLI | 1.0.91 (runtime version verified October 4) | Command-line development assistance |
 | CodeRabbit CLI | 0.7.6 | AI review of local changes and committed ranges |
-| BCS | 2.0.1 | AI-assisted Bash code review |
-| Ollama | 0.34.0; model `qwen3.5:9b` confirmed October 4 | Local inference backend and model used by BCS |
 | vexp CLI | 3.3.2 | Local multi-repository context, impact analysis, and completion checks |
 | LikeC4 CLI | 1.59.4 (WSL); CI pins 1.59.1 | Architecture-as-code modeling, validation, previews, and model queries |
 | Erode CLI | 0.11.0 (package metadata) | AI-assisted comparison of code changes with the LikeC4 model |
@@ -760,14 +758,6 @@ credential-scoped wrapper. Its version is confirmed from installed package
 metadata; this inventory does not retrieve a provider credential or run an AI
 analysis.
 
-BCS is maintained in `bash-bcs-workspace`. Its configured model name must match
-an installed Ollama model:
-
-```bash
-ollama list
-bcs check path/to/script.sh
-```
-
 CodeRabbit is available as both `coderabbit` and `cr`. It requires
 authentication and sends the selected change data to the CodeRabbit service,
 so review the scope before running it:
@@ -953,12 +943,10 @@ provider credential. GitHub CLI remains the source of its GitHub token. See
 and [Doppler Secrets Management](doppler-secrets-management.md) for the
 credential-scoped wrapper and security boundaries.
 
-GitHub Actions governance uses Doppler project `homelab-dev`, environment
-`github`, and config `ci`. Its `REPOSITORY_AUDIT_TOKEN` is a read-only
-fine-grained GitHub PAT restricted to the private `bash-bcs-workspace`
-repository and synchronized into the `homelab-docs` Actions secrets. See
-[GitHub Actions Governance](github-actions-governance.md) for its permissions,
-verification, rotation, and revocation procedures.
+GitHub Actions governance uses the workflow's read-only `GITHUB_TOKEN` to
+audit the public repositories in the policy manifest. See
+[GitHub Actions Governance](github-actions-governance.md) for its permissions
+and verification procedures.
 
 ## Supporting runtimes and package managers
 
@@ -998,7 +986,6 @@ and managed integration records are:
 | pipx | check-jsonschema, Ansible Core |
 | Go build in `~/.local/bin` | Mike Farah yq v4, actionlint |
 | User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs; uv and uvx through Astral's standalone installer |
-| Snap | Ollama 0.34.0, published as `mz2` |
 | Ubuntu `.deb` plus desktop-managed artifacts | ExtraHeadroom Desktop; self-contained Headroom Python runtime, Serena environment, RTK, Codebase Memory, and Chisle integration |
 
 Avoid similarly named packages from unrelated projects, especially the
@@ -1012,15 +999,13 @@ markdownlint-cli2, yamllint, actionlint, GitHub issue-form and Compose schema
 validation, JSON parsing, and Gitleaks. A hook runs only when its file filters or
 stage apply. All eleven configure the shared baseline validation workflow.
 
-`bash-bcs-workspace` is not present in this workspace, so no current repository
-coverage is claimed for it. The installed BCS 2.0.1 executable remains inventoried.
 The table records configured coverage; it does not claim every repository's
 complete test suite was executed.
 
 | Repository | Primary content | Additional tools and validation |
 | --- | --- | --- |
 | `frame-and-sample` | Markdown documentation and templates | Baseline workflow and new-repository template |
-| `homelab-dns` | Bash, service configuration, Markdown | Shell validation; architecture-drift workflow |
+| `homelab-dns` | Bash, service configuration, Nebula-Sync installer, Markdown | Shell validation; architecture-drift workflow |
 | `homelab-docs` | Markdown, GitHub YAML, LikeC4, and Mermaid | LikeC4, Mermaid, baseline, and governance workflows; manual Erode drift analysis; owns this inventory |
 | `homelab-monitoring-observability` | Apache and Munin configuration documentation | Shared checks plus the Munin scaffold hook |
 | `homelab-network` | Network documentation and repository scaffolding | Shared checks for applicable files |

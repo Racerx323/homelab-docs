@@ -9,7 +9,7 @@ views "Portfolio" {
   view other-projects {
     title "Optional and Adjacent Projects"
     description "Projects maintained in the workspace that are independent of, or adjacent to, the core homelab runtime."
-    include operator, portfolio.nebulaWorkspace, portfolio.mediaRepo, mediaKnowledgeBase, mediaKnowledgeBase.*
+    include operator, portfolio.mediaRepo, mediaKnowledgeBase, mediaKnowledgeBase.*
     autoLayout LeftRight
   }
 }

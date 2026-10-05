@@ -21,7 +21,8 @@ model {
       }
       nebulaSync = service "Nebula-Sync" {
         description "Synchronizes Pi-hole configuration across peers."
-        metadata { repository "bash-bcs-workspace/projects/nebula-sync" }
+        metadata { repository "homelab-dns/nebula-sync" }
+        link https://github.com/Racerx323/homelab-dns/tree/main/nebula-sync "Installer source"
       }
     }
   }

@@ -31,9 +31,6 @@ model context. This means relevant code and architecture data are sent to the
 configured Gemini, OpenAI, or Anthropic service. Review the provider's data
 handling terms before enabling Erode for private or sensitive repositories.
 
-Erode does not currently document Ollama as a supported provider. The local
-Ollama installation used by BCS cannot be assumed to work with Erode.
-
 Start with advisory results. Do not make Erode a required merge check until
 its findings, operating cost, and data exposure have been evaluated.
 

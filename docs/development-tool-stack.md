@@ -328,6 +328,96 @@ for the workstation, Codex, VS Code, repository, and CI setup.
 GitHub Copilot's version command completed using its installed 1.0.91 runtime
 outside the filesystem sandbox. No Copilot model request was made.
 
+### Proton Mail SMTP for Codex
+
+Local configuration checked October 5, 2026. Proton Mail is available to Ubuntu
+Codex through the user-owned `proton_mail` stdio MCP server. It is independent
+of Headroom and uses Python's standard SMTP/MIME implementation with the MCP
+Python SDK. The isolated environment uses Python 3.12.3; its dependency lock
+records `mcp==1.30.0`. Native Windows registration has not been checked.
+
+| Setting | Local configuration |
+| --- | --- |
+| SMTP endpoint | `smtp.protonmail.ch`, TCP port `587` |
+| Transport security | STARTTLS with default certificate and hostname verification before authentication; no plaintext fallback |
+| Authentication | Configured sender address and a dedicated Proton SMTP token; never the Proton account password |
+| SMTP socket timeout | 30 seconds |
+| MCP transport | stdio; Codex launches the local Python process |
+| Adapter and local instructions | `$HOME/.local/share/codex-mail/server.py` and `README.md` |
+| Python environment | `$HOME/.local/share/codex-mail/.venv` |
+| Dependency lock and tests | `$HOME/.local/share/codex-mail/requirements.lock` and `test_server.py` |
+| Codex registration | `$HOME/.codex/config.toml`, table `[mcp_servers.proton_mail]` |
+| Local credential file | `$HOME/.config/codex-mail/proton-smtp.json` |
+| External credential storage | Dashlane password manager secure note titled `chatgpt proton mail smtp` (owner-reported) |
+
+The credential JSON contains the fields `sender` and `smtp_token`. Both its
+directory and file must belong to the current user. The adapter requires
+directory mode `0700`, regular-file mode `0600`, and rejects a credential-file
+symlink. A metadata-only check confirmed those permissions and ownership on
+October 5; credential contents were not read for this documentation update.
+The Dashlane note is external storage, not a configured runtime integration:
+the adapter reads the local JSON file. No credential values belong in this
+document, Codex configuration, repository files, prompts, or diagnostic logs.
+
+The following registration contains only the verified executable paths and
+timeouts; it omits credentials and unrelated Codex configuration:
+
+```toml
+[mcp_servers.proton_mail]
+command = "/home/aaron/.local/share/codex-mail/.venv/bin/python"
+args = ["/home/aaron/.local/share/codex-mail/server.py"]
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+```
+
+The adapter exposes three tools:
+
+| Tool | Inputs and behavior |
+| --- | --- |
+| `check_connection` | No inputs; opens SMTP, verifies TLS, and authenticates without submitting an email |
+| `preview_email` | Absolute `eml_path`; locally prepares the message and returns sender, To/Cc, envelope recipients, subject, bodies, attachment names/types/sizes/hashes, prepared size, and SHA-256 |
+| `send_email` | The same `eml_path` and reviewed `approved_sha256`; recomputes the prepared payload hash and submits only if it matches |
+
+**Every email requires explicit user approval after the final preview.** Show
+the final recipients, subject, body, and attachments before requesting approval.
+Approval covers one send only; any changes require a new preview and renewed
+approval. Drafting, previewing, and checking the connection do not authorize
+sending. This preference is recorded globally in `$HOME/.codex/AGENTS.md`.
+The SHA-256 check protects payload consistency; it does not establish user
+consent. Tool annotations likewise do not replace approval.
+
+Drafts must be absolute `.eml` paths to regular files without a final-component
+symlink. Both the draft and prepared MIME message have a 20 MiB limit. The
+adapter rejects malformed MIME, duplicate or malformed checked headers, and
+`Bcc`, `Sender`, `Return-Path`, and `Resent-*` headers. Recipients come from
+ASCII `To` and `Cc` addresses. `From` must match the configured sender without
+a display name, or is supplied when absent. Preparation removes `X-Unsent`,
+supplies a missing `Date` from the draft's modification time, and derives a
+missing `Message-ID` from the original draft hash and sender domain. The
+preview hash covers the resulting SMTP payload, so changing the draft or its
+modification time can invalidate approval when those headers are generated.
+
+On October 5, the active WSL session successfully checked TLS/authentication
+and, after explicit approval, submitted the Headroom support email with four
+attachments. SMTP accepted it with no refused recipients; delivery was not
+confirmed. This adapter sends mail but does not read the mailbox or monitor
+delivery. No new connection check or message submission was performed for
+this documentation update.
+
+Partial acceptance can leave some recipients accepted and others refused.
+Never automatically retry an uncertain send or resend to accepted recipients.
+Inspect Sent and confirm receipt separately before deciding whether another
+approved send is needed. Adapter errors suppress raw SMTP responses and
+credentials.
+
+For offline adapter validation, run the existing mocked-SMTP tests from its
+private installation directory. This command does not submit email:
+
+```bash
+cd "$HOME/.local/share/codex-mail"
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m unittest -v test_server
+```
+
 ### Headroom optimization and managed integrations
 
 See [ExtraHeadroom in Ubuntu WSL2](extraheadroom-wsl2.md) for installation,

@@ -30,7 +30,6 @@ pre-commit hook, and any workflows required by its assigned profiles.
 | Profile | Repository coverage |
 | --- | --- |
 | Baseline | All managed repositories |
-| Bats | `bash-bcs-workspace` |
 | Architecture | `homelab-dns` |
 | Mermaid and LikeC4 | `homelab-docs` |
 | Container security | `homelab-notification` |
@@ -39,7 +38,9 @@ pre-commit hook, and any workflows required by its assigned profiles.
 
 The reusable baseline is pinned to the immutable commit recorded in
 `config/repository-actions-policy.yaml`. The remote audit was verified on July
-21, 2026 against all 11 managed repositories with zero policy violations.
+21, 2026 against the then-current 11-repository manifest with zero policy
+violations. The current manifest contains ten public repositories; that historical
+result does not validate the revised manifest.
 
 ## Baseline validation
 
@@ -81,65 +82,26 @@ The scheduled workflow clones every repository declared in the policy:
 scripts/audit-repository-actions.sh --remote
 ```
 
-Most managed repositories are public. `bash-bcs-workspace` is private, so the
-governance repository requires a `REPOSITORY_AUDIT_TOKEN` Actions secret. Use a
-fine-grained personal access token with read-only Contents and Metadata access
-to only `bash-bcs-workspace`. The workflow falls back to its repository
-`GITHUB_TOKEN`, but that token cannot clone the private repository. An
-inaccessible repository is counted as a policy violation even in report-only
-mode.
+All repositories in the current policy manifest are public. The governance
+workflow uses its repository `GITHUB_TOKEN` with read-only Contents permission;
+it does not require a separate audit PAT or Doppler sync. An inaccessible
+repository is counted as a policy violation even in report-only mode.
 
-Do not grant write, administration, workflow, issue, or pull-request permission
-to the audit token.
+### Architecture credentials
 
-### Audit credential inventory
+The architecture-drift workflow uses a least-privilege sync:
 
 | Property | Value |
 | --- | --- |
-| Credential | Fine-grained GitHub personal access token |
-| GitHub resource owner | `Racerx323` |
-| GitHub repository access | Only `bash-bcs-workspace` |
-| GitHub repository permissions | Contents: read; Metadata: read |
-| Doppler source of truth | Project `homelab-dev`, environment `github`, config `ci_governance` |
-| Doppler secret name | `REPOSITORY_AUDIT_TOKEN` |
-| GitHub sync target | Repository `Racerx323/homelab-docs`, Actions secrets |
-| Workflow consumer | `.github/workflows/repository-governance.yml` |
-
-The token value belongs only in Doppler and the encrypted GitHub Actions secret
-created by the Doppler integration. Never put it in documentation, repository
-files, shell history, issue text, workflow input, or a local `.env` file. Do not
-reuse the broader GitHub CLI OAuth token.
-
-### Doppler-to-GitHub sync
-
-The Doppler GitHub integration synchronizes config `ci_governance` in the
-`github` environment of project `homelab-dev` to the Actions secrets for
-`homelab-docs`. Doppler is the source of truth; GitHub stores the execution copy
-consumed by the workflow. Update and rotate the value in Doppler, not directly
-in GitHub, so later synchronization cannot overwrite an out-of-band change.
-
-The workflow does not fetch secrets from Doppler at runtime and therefore does
-not need a Doppler service token. The GitHub repository currently receives
-these synchronized secret names:
-
-- `DOPPLER_PROJECT`
-- `DOPPLER_ENVIRONMENT`
-- `DOPPLER_CONFIG`
-- `REPOSITORY_AUDIT_TOKEN`
-
-The architecture-drift workflow uses a separate least-privilege sync:
-
-| Property | Value |
-| --- | --- |
-| Doppler source of truth | Project `homelab-dev`, environment `github`, config `ci_architecture` |
+| Doppler source of truth | Project `homelab-dev`, environment `ci`, config `ci_architecture` |
 | Doppler secret name | `ERODE_GEMINI_API_KEY` |
 | GitHub sync target | Repository `Racerx323/homelab-dns`, Actions secrets |
 | Workflow consumer | `.github/workflows/architecture-drift.yml` |
 
-The `ci` root config contains only Doppler metadata. Its two branch configs
-separate credentials by consumer: `ci_governance` contains only the audit PAT,
-and `ci_architecture` contains only the Gemini key. Do not sync the root config
-or either branch to additional repositories without reviewing that boundary.
+The `ci` root config contains only Doppler metadata. The `ci_architecture`
+branch contains only the Gemini key. Do not sync either config to additional
+repositories without reviewing that boundary. Retired audit credentials and
+syncs require separate live cleanup; these repository edits do not revoke them.
 
 Erode loads the canonical `architecture/likec4` workspace. Keep that workspace
 valid with both the stack's pinned LikeC4 release and the LikeC4 release
@@ -158,20 +120,13 @@ Inspect names without printing values:
 ```bash
 doppler secrets \
   --project homelab-dev \
-  --config ci_governance \
-  --only-names
-
-gh secret list --repo Racerx323/homelab-docs
-
-doppler secrets \
-  --project homelab-dev \
   --config ci_architecture \
   --only-names
 
 gh secret list --repo Racerx323/homelab-dns
 ```
 
-Trigger and verify the audit after initial setup or rotation:
+Trigger and verify the audit after policy or workflow changes:
 
 ```bash
 gh workflow run repository-governance.yml \
@@ -190,20 +145,6 @@ gh run watch RUN_ID \
 Because the audit is report-only, a successful workflow conclusion means the
 audit executed, not necessarily that the violation count is zero. Open the run
 summary or log and confirm `Policy violations: 0`.
-
-### Rotate or revoke the audit PAT
-
-1. Create a replacement fine-grained PAT with the same single-repository,
-   read-only scope and a defined expiration.
-2. Replace `REPOSITORY_AUDIT_TOKEN` in project `homelab-dev`, environment
-   `github`, config `ci_governance`.
-3. Confirm the Doppler integration updates the GitHub Actions secret timestamp.
-4. Run the governance workflow and confirm zero violations.
-5. Revoke the old PAT in GitHub.
-
-If the token is exposed or suspected of misuse, revoke it immediately, create
-a replacement, update Doppler, rerun the audit, and review GitHub and Doppler
-audit logs. Do not wait for the normal rotation window.
 
 ## Add a repository
 

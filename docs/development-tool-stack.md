@@ -369,11 +369,11 @@ code. It requires a complete repository maturity verdict and writes only
 first publication. Publication is serialized, checks whether `main` has advanced,
 skips unchanged badges, and never force-updates the branch.
 
-The badge in `frame-and-sample/.github/README.md` links to the workflow. It becomes
-available after the first successful published `main` run; PR runs never update
-it. Until then, the badge URL has no generated image. A failed scan leaves the
-last published badge in place, so consult the linked workflow for current run
-status. The badge displays the detected maturity level, rather than CI success.
+The badge in `frame-and-sample/.github/README.md` links to the workflow. The image
+is published by successful `main` runs; PR runs never update it. A failed scan
+leaves the last published badge in place, so consult the linked workflow for
+current run status. The badge displays the detected maturity level, rather than
+CI success.
 
 The clean committed snapshot inspected on October 22 scored L1 (Documented),
 44/105 (42%), with a complete maturity verdict. Dimension scores were context
@@ -391,8 +391,18 @@ and the local repository governance audit reported zero policy violations.
 
 Run `node --test tests/harness-score-workflow.test.cjs` from `frame-and-sample`
 to check badge publication safeguards. Validate workflow changes with actionlint,
-yamllint, and the local repository governance audit. Live PR, `main`, and badge
-rendering qualification remains pending until these changes are published.
+yamllint, and the local repository governance audit.
+
+Live qualification on October 22 passed for `frame-and-sample` commit
+`ef24eeed2cb23828a99eade382725a8cb909ca2a`:
+[Harness Score run 39865007853](https://github.com/Racerx323/frame-and-sample/actions/runs/39865007853)
+completed both scanning and publication, reporting L1, 55/105 (52%), with a
+complete maturity verdict. The generated `badges` branch contains only
+`harness-badge.svg`; its initial commit records the scanned source commit.
+GitHub's rendered README includes the hosted SVG, whose accessible label is
+`Harness Score L1`. The frame-and-sample and homelab-docs baseline workflows also
+passed. A live pull-request run remains unqualified; publication restrictions are
+covered by the local safeguard tests.
 
 For upgrades, review upstream release notes, verify the release commit, and
 update the action SHA and npm version together. Repeat the clean-snapshot scan

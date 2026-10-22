@@ -8,3 +8,7 @@ Thumbs.db
 # vexp — repository-local runtime files
 /.vexp/*
 !/.vexp/.gitattributes
+
+# Generated Python bytecode
+__pycache__/
+*.py[cod]

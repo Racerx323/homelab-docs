@@ -1,0 +1,180 @@
+Use $harness-engineering to onboard this repository to my existing Harness Engineering implementation.
+
+TARGET_REPO=/home/aaron/code/REPO_NAME
+
+Complete the local implementation and validation. This authorizes repository edits and read-only GitHub inspection. It does not authorize committing, pushing, merging, changing repository settings, triggering remote workflows, contacting homelab hosts, or deploying services.
+
+Reference implementation:
+- /home/aaron/code/frame-and-sample/.github/workflows/harness-score.yml
+- /home/aaron/code/frame-and-sample/tests/harness-score-workflow.test.cjs
+- The Harness Score section of /home/aaron/code/frame-and-sample/AGENTS.md
+
+Shared documentation:
+- /home/aaron/code/homelab-docs/docs/development-tool-stack.md
+- /home/aaron/code/homelab-docs/docs/github-actions-governance.md
+
+Personal skill:
+- /home/aaron/.agents/skills/harness-engineering/SKILL.md
+
+1. Establish the actual repository state
+
+Read the applicable workspace and repository instructions. Resolve the target’s absolute root, current branch, working-tree state, remotes, default branch, and GitHub visibility. Verify repository identity before preparing any publication configuration.
+
+Inspect the existing agent instructions, workflows, hooks, test commands, README location, and relevant validation configuration. Follow the workspace’s tool-selection rules.
+
+Preserve existing user changes. Do not reset, discard, overwrite, or include unrelated work. If unrelated changes affect the scan, distinguish them from this onboarding.
+
+Inspect the reference implementation rather than assuming its versions or contents are unchanged. Identify any uncommitted template changes and record which template revision or reviewed content you use.
+
+If this repository is already onboarded, reconcile the existing implementation instead of adding duplicate workflows, badges, or guidance.
+
+2. Capture a reproducible baseline
+
+Check the installed Harness Score version against the reviewed reference workflow’s explicit CLI version. Use matching versions for before-and-after comparisons.
+
+Do not silently install or upgrade tools, use floating package versions, or substitute a newer release. Report missing or mismatched prerequisites while continuing work that does not depend on them.
+
+Run a repository-only maturity scan with user and system scopes disabled. Keep raw output and diagnostics in an owner-private location outside the scan root.
+
+Identify whether the baseline represents:
+- The committed repository snapshot.
+- The current working tree.
+- A candidate snapshot containing the intended changes.
+
+Because relevant ignored and untracked files influence scanning, use comparable inputs for the baseline and candidate. Record the source revision and any deliberate working-tree overlay.
+
+Inspect the exit status and maturity verdict before interpreting results. An incomplete scan is unavailable evidence, not an authoritative low score. Preserve its diagnostic reasons.
+
+For a complete baseline, record:
+- Scanner version and source identity.
+- Maturity level and total score.
+- All dimension scores.
+- The next-level gaps.
+- Relevant failed checks and their evidence.
+
+Distinguish absent safeguards from existing tooling the scanner does not recognize.
+
+3. Implement the CI integration
+
+Adapt the existing frame-and-sample implementation with the smallest appropriate changes.
+
+Preserve the repository’s existing validation workflows and checks. Add or reconcile a dedicated Harness Score workflow that:
+- Runs on pull requests, pushes to the actual default branch, and manual dispatch.
+- Uses immutable, full-commit action references.
+- Explicitly pins the Harness Score npm version.
+- Uses the reviewed runtime version from the reference implementation.
+- Scores repository maturity only.
+- Leaves user/system scopes and PR comments disabled.
+- Gives the scan job read-only repository access.
+- Produces a job summary and JSON, Markdown, and SVG artifacts.
+- Uses bounded execution time and the reference artifact-retention policy.
+- Fails visibly on invalid or incomplete scans.
+
+For new adoption, use min-level: 0. This permits a complete low score while retaining scan-integrity failures. Preserve any existing stricter approved gate; do not lower or raise it without explicit authorization.
+
+Do not use blanket continue-on-error behavior to hide scanner or integrity failures.
+
+4. Adapt badge publication safely
+
+Retain a separate publication job with write access confined to that job.
+
+Publication must:
+- Depend on successful scanning.
+- Be restricted to the verified target repository.
+- Run only for trusted pushes or manual dispatch on its actual default branch.
+- Never publish from a pull-request run.
+- Consume artifacts from the same workflow run.
+- Require a complete repository maturity verdict.
+- Publish only the intended SVG to the dedicated badges branch.
+- Preserve existing branch contents when updating.
+- Create an isolated initial badge commit when bootstrapping.
+- Serialize publication and check for superseded source revisions.
+- Skip unchanged badges and avoid force updates.
+- Avoid checking out or executing repository code in the privileged publication job.
+
+Inspect any existing badges branch before planning to reuse it. Preserve unrelated content.
+
+Update all repository-specific and default-branch literals, including publication guards, API references, tests, and URLs. Do not leave frame-and-sample identities in the target implementation.
+
+Add the automated maturity badge to the README GitHub actually displays. Preserve its location and verify affected relative links. Link the badge to the target workflow.
+
+Explain that the badge displays the last published maturity level, while the workflow reports current execution status. Before the first successful publication, the image may be unavailable.
+
+For private repositories, verify the proposed badge access model. Do not expose artifacts through another repository or public service to make a badge render.
+
+5. Add concise agent guidance
+
+Add or reconcile a short Harness Score section in the target’s applicable AGENTS.md.
+
+Cover:
+- Using $harness-engineering for audits and requested remediation.
+- Leaving repository files unchanged for audit-only requests.
+- Running the publication safeguard tests after relevant workflow or test changes.
+- Keeping scoring repository-only.
+- Preserving the approved minimum-level policy.
+- Failing incomplete or malformed scans.
+- Restricting badge publication to successful, trusted default-branch runs.
+- Keeping scan access read-only and publication privileges separate.
+
+Keep version pins in workflow configuration and installation details in the shared toolstack documentation. Avoid copying the entire skill or duplicating existing instructions.
+
+Do not install another personal skill, editor plugin, or editor-specific hook configuration.
+
+6. Keep onboarding focused
+
+Implement the integration and any directly necessary corrections.
+
+Report broader remediation opportunities separately. Do not add artificial tests, empty skills, unnecessary application dependencies, or irrelevant tooling merely to increase the score.
+
+Preserve existing client sandbox settings, approval policies, security controls, and runtime behavior.
+
+Do not change branch protection, required checks, credentials, secrets, deployment settings, or unrelated automation.
+
+Update the target repository’s coverage entry and relevant adoption notes in the shared development-tool-stack document. Date new observations without implying that older inventory entries were reverified. Record local configuration separately from live qualification.
+
+7. Validate the actual change
+
+Adapt and run the reference publication safeguard tests. Retain meaningful coverage for:
+- Repository and event restrictions.
+- Default-branch restrictions.
+- Dependency on successful scanning.
+- Read-only scanning and isolated publication privileges.
+- Initial branch creation.
+- Subsequent updates without force.
+- Unchanged badges.
+- Superseded runs.
+- Incomplete reports.
+- Missing or malformed badge input.
+- API failures.
+
+Run applicable actionlint, YAML, Markdown, syntax, whitespace, repository hooks, and governance checks. Follow the workspace’s Podman and browser-backed execution rules when applicable.
+
+Run the required completion helper once for the tested state. If it is unavailable or reports an environment error, state that limitation and use the applicable repository checks; do not claim the helper verified the change.
+
+Repeat the comparable candidate scan with the same scanner version. Separate score changes caused by onboarding from changes caused by unrelated files or different scan inputs.
+
+Keep raw evidence private. Do not send source or diffs to an external review service without explicit approval.
+
+8. Deliver a concrete review handoff
+
+Complete all authorized local work before asking for publication approval.
+
+Report:
+- The verified repository identity and default branch.
+- Files changed and their purpose.
+- The reference revision and dependency pins used.
+- Baseline and candidate scores, dimension changes, and remaining gaps.
+- Actual validation results and material limitations.
+- Any preserved user changes.
+- Whether anything was committed, published, or run remotely.
+
+Finish with a specific publication sequence for later approval:
+- Commit only the reviewed changes.
+- Push through the repository’s established branch/PR process.
+- Verify CI for the exact published commit.
+- Confirm pull-request runs cannot publish badges.
+- Confirm a successful trusted default-branch run publishes the badge.
+- Verify the hosted SVG and GitHub-rendered README.
+- Update the live qualification record with observed results.
+
+Until publication is explicitly authorized, leave the implementation local and clearly mark live CI and badge qualification as pending.

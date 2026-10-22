@@ -410,6 +410,41 @@ and publication tests; compare maturity-model changes before changing any gate.
 Choose a minimum level after reviewing the pilot results. Broader repository
 adoption and required-check enforcement are separate follow-up changes.
 
+#### Editor and agent integration
+
+The [upstream plugins](https://github.com/paladini/harness-score/tree/b8c3941ba49edcf69f973e26c1940dae487f7c7a/plugins)
+provide editor-specific audit commands and remediation skills. Review date:
+October 22, 2026; source pin matches the v1.8.3 CI pilot.
+
+| Client | Reviewed integration | Local status |
+| --- | --- | --- |
+| Cursor | `/harness-audit` command and `harness-engineering` skill in `plugins/cursor` | Upstream package reviewed; not installed by this change |
+| Claude Code | Audit command and skill in `plugins/claude-code` | Package exists at the reviewed revision; not installed by this change |
+| Codex in WSL | Personal `$harness-engineering` adaptation combines audit and requested remediation | Installed under `$HOME/.agents/skills/harness-engineering`; fresh client discovery remains to be checked |
+| Windsurf | Listed in the [plugins roadmap](https://github.com/paladini/harness-score/blob/b8c3941ba49edcf69f973e26c1940dae487f7c7a/PLUGINS-ROADMAP.md) | No package in the reviewed plugin tree; not installed |
+
+The earlier description of Claude Code support as merely in progress is stale
+for this revision. Codex has no dedicated upstream bundle here. The personal
+adaptation replaces Claude Code-specific paths and hook recipes; copying the
+Claude Code skill verbatim would prescribe the wrong client configuration.
+
+The maintained source is
+[`personal-codex-skills/skills/harness-engineering`](https://github.com/Racerx323/personal-codex-skills/tree/main/skills/harness-engineering).
+It retains upstream MIT notices and provenance. Invoke it in Codex with:
+
+```text
+$harness-engineering audit /home/aaron/code/frame-and-sample without changes
+```
+
+For remediation, ask it to implement specific findings or an agreed improvement
+scope. An audit alone does not authorize edits. The adaptation checks the
+installed scanner against repository pins, keeps user/system scopes disabled,
+and refuses authoritative scores from incomplete scans. Existing gate thresholds
+and trusted-main badge publication rules remain in force. It does not create a
+Codex `/harness-audit` slash command or install an editor extension. Newly
+installed skills are available on the next turn; native Windows installation and
+cross-client discovery were not qualified by this change.
+
 ### Proton Mail SMTP for Codex
 
 Local configuration checked October 5, 2026. Proton Mail is available to Ubuntu
@@ -933,6 +968,12 @@ The source checkout is `$HOME/code/personal-codex-skills`; install only reviewed
 automatically follow source edits. Codex-managed system skills and compatibility
 data remain under `$HOME/.codex/skills`. Use the Context7 plugin bundle rather
 than adding a duplicate personal entrypoint.
+
+The October 22 Harness Score addition installs the personal
+`harness-engineering` adaptation in WSL. See
+[Editor and agent integration](#editor-and-agent-integration) for its source,
+invocation, support distinctions, and discovery limits. The October 4 discovery
+counts above do not include this later installation.
 
 #### Per-client capability inventory
 

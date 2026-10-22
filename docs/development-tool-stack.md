@@ -311,6 +311,7 @@ authorization boundary.
 | Codex CLI | 0.160.0 (WSL, October 4) | Repository-aware implementation and troubleshooting |
 | GitHub Copilot CLI | 1.0.91 (runtime version verified October 4) | Command-line development assistance |
 | CodeRabbit CLI | 0.7.6 | AI review of local changes and committed ranges |
+| harness-score | 1.8.3 (WSL, October 22) | Deterministic repository harness-maturity audit; initial CI pilot in `frame-and-sample` |
 | vexp CLI | 3.3.2 | Local multi-repository context, impact analysis, and completion checks |
 | LikeC4 CLI | 1.59.4 (WSL); CI pins 1.59.1 | Architecture-as-code modeling, validation, previews, and model queries |
 | Erode CLI | 0.11.0 (package metadata) | AI-assisted comparison of code changes with the LikeC4 model |
@@ -325,6 +326,79 @@ for the workstation, Codex, VS Code, repository, and CI setup.
 
 GitHub Copilot's version command completed using its installed 1.0.91 runtime
 outside the filesystem sandbox. No Copilot model request was made.
+
+### Harness Score pilot
+
+[harness-score](https://github.com/paladini/harness-score) measures the repository
+infrastructure available to AI coding agents. It reports maturity from L0 to L4
+and scores context, skills, hooks, sensors, CI, and hygiene. The installed WSL
+CLI was verified as 1.8.3 on October 22, 2026. The scanner makes no model or
+network requests; obtaining the npm package still requires registry access.
+
+Run from the individual repository root, using the same version as CI:
+
+```bash
+npx --yes harness-score@1.8.3 . --gate maturity --min-level 0
+```
+
+Use `--json`, `--md /path/to/report.md`, or `--badge /path/to/badge.svg` for
+machine-readable results, Markdown, or an SVG maturity badge. Keep local reports
+outside the scan root. The scanner includes relevant untracked and ignored
+files; compare clean snapshots when qualifying a change. Leave user and system
+scopes disabled so workstation configuration does not influence CI comparisons.
+
+The initial implementation is
+[`frame-and-sample/.github/workflows/harness-score.yml`](https://github.com/Racerx323/frame-and-sample/blob/main/.github/workflows/harness-score.yml).
+It runs independently of the shared baseline on pull requests, pushes to
+`main`, and manual dispatch. The upstream action is pinned to commit
+`b8c3941ba49edcf69f973e26c1940dae487f7c7a` (v1.8.3), and its npm `version`
+input is explicitly pinned to `1.8.3`. Node.js is pinned to `26.4.0`.
+
+The pilot uses `gate: maturity` and `min-level: 0`: a complete low score passes,
+while malformed or incomplete scans fail. Exit codes are 0 for a complete pass,
+1 for a score below the configured minimum, and 2 for invalid usage or an
+incomplete gated scan. Successful scans provide a job summary and a 14-day
+`harness-score` artifact containing JSON, Markdown, and SVG outputs. PR comments
+are disabled, and the scan job has only read access to repository contents.
+
+A separate publication job has `contents: write` and runs only after a successful
+scan from a push or manual dispatch on `Racerx323/frame-and-sample`'s `main`.
+It consumes that run's artifact without checking out or executing repository
+code. It requires a complete repository maturity verdict and writes only
+`harness-badge.svg` to the dedicated `badges` branch, creating that branch on the
+first publication. Publication is serialized, checks whether `main` has advanced,
+skips unchanged badges, and never force-updates the branch.
+
+The badge in `frame-and-sample/.github/README.md` links to the workflow. It becomes
+available after the first successful published `main` run; PR runs never update
+it. Until then, the badge URL has no generated image. A failed scan leaves the
+last published badge in place, so consult the linked workflow for current run
+status. The badge displays the detected maturity level, rather than CI success.
+
+The clean committed snapshot inspected on October 22 scored L1 (Documented),
+44/105 (42%), with a complete maturity verdict. Dimension scores were context
+9/20, skills 0/17, hooks 8/14, sensors 0/20, CI 7/14, and hygiene 20/20. These
+results precede the pilot changes. Sensor detection reported zero despite the
+existing reusable baseline; review scanner recognition before treating missing
+points as missing validation. Maturity measures detected infrastructure and
+does not establish functional correctness or the quality of documentation.
+
+The clean candidate snapshot, including the README move, pilot workflow, and
+publication tests, scored L1, 55/105 (52%). An out-of-root symlink fixture exited
+2 with an incomplete verdict; the CLI rendered an explicitly incomplete SVG,
+which the publication verdict check rejects. Nine local publication tests passed,
+and the local repository governance audit reported zero policy violations.
+
+Run `node --test tests/harness-score-workflow.test.cjs` from `frame-and-sample`
+to check badge publication safeguards. Validate workflow changes with actionlint,
+yamllint, and the local repository governance audit. Live PR, `main`, and badge
+rendering qualification remains pending until these changes are published.
+
+For upgrades, review upstream release notes, verify the release commit, and
+update the action SHA and npm version together. Repeat the clean-snapshot scan
+and publication tests; compare maturity-model changes before changing any gate.
+Choose a minimum level after reviewing the pilot results. Broader repository
+adoption and required-check enforcement are separate follow-up changes.
 
 ### Proton Mail SMTP for Codex
 
@@ -1004,7 +1078,7 @@ complete test suite was executed.
 
 | Repository | Primary content | Additional tools and validation |
 | --- | --- | --- |
-| `frame-and-sample` | Markdown documentation and templates | Baseline workflow and new-repository template |
+| `frame-and-sample` | Markdown documentation and templates | Baseline workflow and new-repository template; Harness Score CI and badge pilot added October 22 |
 | `homelab-dns` | Bash, service configuration, Nebula-Sync installer, Markdown | Shell validation; architecture-drift workflow |
 | `homelab-docs` | Markdown, GitHub YAML, LikeC4, and Mermaid | LikeC4, Mermaid, baseline, and governance workflows; manual Erode drift analysis; owns this inventory |
 | `homelab-monitoring-observability` | Apache and Munin configuration documentation | Shared checks plus the Munin scaffold hook |

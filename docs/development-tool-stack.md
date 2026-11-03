@@ -975,6 +975,24 @@ The October 22 Harness Score addition installs the personal
 invocation, support distinctions, and discovery limits. The October 4 discovery
 counts above do not include this later installation.
 
+On November 3, Clear Writing was updated from reviewed commit
+`75b81f09e32c2e139a0f0c5a2f58e5ad9ff47524`; all ten installed files matched
+the source after a verified backup and rollback rehearsal. Fresh Ubuntu/WSL
+discovery on Codex CLI 0.166.0 found it enabled with no load errors. In four
+fresh CLI sessions, detection loaded it, short editing and drafting requests
+answered without visible skill reads, and code-only arithmetic did not load it.
+These results do not establish consistent automatic selection or IDE/Windows
+routing. See the maintained
+[routing evidence](https://github.com/Racerx323/personal-codex-skills/blob/main/evals/clear-writing/routing.json).
+
+After a scoped routing rule was added to the workspace `AGENTS.md`, three fresh
+trials per scenario loaded Clear Writing for all nine prose requests and left it
+unloaded for all three code-only requests. These finite CLI results support the
+rule for the tested prompts; IDE and native Windows routing remain untested.
+See the
+[retest evidence](https://github.com/Racerx323/personal-codex-skills/blob/main/evals/clear-writing/routing-with-rule.json)
+for the exact rule, instruction hashes, and individual outputs.
+
 #### Per-client capability inventory
 
 Observation date: October 4, 2026. Native Windows discovery used the Windows VS

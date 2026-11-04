@@ -14,6 +14,10 @@ The version tables are an inventory, not a lock file. Repository configuration,
 such as `.pre-commit-config.yaml`, remains the source of truth for required
 checks, arguments, and CI version constraints.
 
+Standalone RTK and Serena were installed and their Codex configurations qualified
+separately on November 3, 2026; see the dated updates below. Other inventory dates
+remain unchanged.
+
 ## Workstation and editor
 
 | Component | Version | Scope |
@@ -549,9 +553,10 @@ separate observations; Chisle appears in both inventories.
 | Integration | Installed version | Provisioning and capability |
 | --- | --- | --- |
 | Headroom MCP | 0.39.0 | Desktop-managed runtime; user-level Codex MCP registration; compression, retrieval, and statistics tools supplied in the VS Code session |
-| RTK | 0.48.0 | Desktop-managed binary; managed shell PATH and workspace instructions select compact shell-command output |
+| RTK (Headroom bundle) | 0.48.0 | Desktop-managed binary retained unchanged; standalone RTK now takes precedence |
+| RTK (standalone, November 3) | 1.1.0 | Official checksum-verified binary in `~/.local/bin`; global native Codex hook and user-owned shell PATH routing |
 | Codebase Memory MCP | 0.11.0 | Desktop-managed binary; enabled integration and user-level Codex MCP registration; graph, architecture, outline, and snippet tools supplied in the VS Code session |
-| Serena MCP | 1.7.0 (`serena-agent`) | Headroom-managed Python environment; user-level Codex MCP registration; symbol navigation, targeted source reads, and symbol editing |
+| Serena MCP (standalone, November 3) | 2.1.0 (`serena-agent`) | User-managed uv tool; Codex selects the REPL interface; Headroom's managed 1.7.0 retained for rollback |
 | Chisle | 3.7.0 | Enabled desktop integration and installed Codex plugin; efficiency mode, audit, review, and help skills |
 
 Chisle's desktop record selects `latest`; the installed Codex plugin version is
@@ -559,6 +564,16 @@ Chisle's desktop record selects `latest`; the installed Codex plugin version is
 `$HOME/.local/share/Headroom/headroom/runtime/venv`; it is not on the audited shell
 PATH as a bare `headroom` command. RTK and Codebase Memory executables live under
 `$HOME/.local/share/Headroom/headroom/bin`.
+
+The November 3 standalone RTK install supersedes the bundled RTK for command
+selection without replacing Headroom's managed copy. See
+[RTK installation and lifecycle for Codex](rtk-installation-and-lifecycle.md)
+for installation, upgrade, rollback, uninstall, PATH precedence, exact-output
+exceptions, and Headroom regeneration checks. Existing GitKraken and Headroom
+hooks were preserved. Login and interactive shells selected RTK 1.1.0, and a
+synthetic native hook request returned the expected command rewrite. The RTK
+lifecycle guide records the subsequent IDE interception checks and the named
+permission profile that grants its history directory access inside the sandbox.
 
 The WSL VS Code Codex app-server uses `$HOME/.codex` and version 0.160.0.
 Its user configuration selects `model_provider = "headroom"` with
@@ -584,6 +599,13 @@ proxy endpoints are separate checks; successful model routing requires request
 evidence. Token compression does not establish a subscription billing reduction.
 
 ### Serena installation and WSL IPv4 workaround
+
+See [Serena installation, repository onboarding, and lifecycle](serena-installation-and-lifecycle.md)
+for the November 3 upgrade from Headroom-managed 1.7.0 to standalone 2.1.0,
+repository onboarding preservation, REPL-aware agent instructions, Codex
+registration, validation, optional-hook tradeoffs, and rollback. The retained
+managed package files match upstream 1.7.0. The following installation and IPv4
+observations describe that earlier managed setup.
 
 [Serena](https://github.com/oraios/serena) provides language-server-backed symbol
 tools, including `get_symbols_overview`, `find_symbol`, and
@@ -1128,7 +1150,7 @@ and managed integration records are:
 | Global npm under NVM | Copilot, LikeC4, Mermaid CLI, Erode, vexp, markdownlint-cli2, markdown-link-check |
 | pipx | check-jsonschema, Ansible Core |
 | Go build in `~/.local/bin` | Mike Farah yq v4, actionlint |
-| User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs; uv and uvx through Astral's standalone installer |
+| User-local upstream binaries | Codex, CodeRabbit, TFLint, terraform-docs, standalone RTK; uv and uvx through Astral's standalone installer |
 | Ubuntu `.deb` plus desktop-managed artifacts | ExtraHeadroom Desktop; self-contained Headroom Python runtime, Serena environment, RTK, Codebase Memory, and Chisle integration |
 
 Avoid similarly named packages from unrelated projects, especially the

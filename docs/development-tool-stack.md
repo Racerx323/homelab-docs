@@ -18,6 +18,10 @@ Standalone RTK and Serena were installed and their Codex configurations qualifie
 separately on November 3, 2026; see the dated updates below. Other inventory dates
 remain unchanged.
 
+Standalone Codebase Memory replaced Headroom's CBM integration on November 4,
+2026. See [Codebase Memory installation and lifecycle](codebase-memory-installation-and-lifecycle.md)
+for the selected release, Codex configuration, qualification, and maintenance.
+
 ## Workstation and editor
 
 | Component | Version | Scope |
@@ -555,15 +559,16 @@ separate observations; Chisle appears in both inventories.
 | Headroom MCP | 0.39.0 | Desktop-managed runtime; user-level Codex MCP registration; compression, retrieval, and statistics tools supplied in the VS Code session |
 | RTK (Headroom bundle) | 0.48.0 | Desktop-managed binary retained unchanged; standalone RTK now takes precedence |
 | RTK (standalone, November 3) | 1.1.0 | Official checksum-verified binary in `~/.local/bin`; global native Codex hook and user-owned shell PATH routing |
-| Codebase Memory MCP | 0.11.0 | Desktop-managed binary; enabled integration and user-level Codex MCP registration; graph, architecture, outline, and snippet tools supplied in the VS Code session |
+| Codebase Memory MCP (standalone, November 4) | 0.12.1 | Checksum-verified upstream release; existing Codex server name retained; Headroom CBM state disabled |
 | Serena MCP (standalone, November 3) | 2.1.0 (`serena-agent`) | User-managed uv tool; Codex selects the REPL interface; Headroom's managed 1.7.0 retained for rollback |
 | Chisle | 3.7.0 | Enabled desktop integration and installed Codex plugin; efficiency mode, audit, review, and help skills |
 
 Chisle's desktop record selects `latest`; the installed Codex plugin version is
 3.7.0. Headroom's runtime lives under
 `$HOME/.local/share/Headroom/headroom/runtime/venv`; it is not on the audited shell
-PATH as a bare `headroom` command. RTK and Codebase Memory executables live under
-`$HOME/.local/share/Headroom/headroom/bin`.
+PATH as a bare `headroom` command. Retained managed RTK and Codebase Memory
+executables live under `$HOME/.local/share/Headroom/headroom/bin`; their standalone
+replacements are selected through `$HOME/.local/bin`.
 
 The November 3 standalone RTK install supersedes the bundled RTK for command
 selection without replacing Headroom's managed copy. See
@@ -737,65 +742,28 @@ for supported installation methods and language-server settings.
 
 ### Codebase Memory indexing and agent workflow
 
-Codebase Memory is registered in Ubuntu's `$HOME/.codex/config.toml` with the
-Headroom-managed executable
-`$HOME/.local/share/Headroom/headroom/bin/codebase-memory-mcp` and
-`CBM_CACHE_DIR=$HOME/.local/share/Headroom/headroom/tools/codebase-memory-cache`.
-Use that cache explicitly for CLI configuration commands so they address the
-same settings and indexes as the MCP server.
+See [Codebase Memory installation and lifecycle for Codex](codebase-memory-installation-and-lifecycle.md)
+for the November 4 migration, current configuration, release verification,
+index rebuilds, watcher checks, update procedure, rollback, and removal.
 
-On October 4, the managed CLI's `config list` confirmed these effective settings:
+Codex uses `$HOME/.local/bin/codebase-memory-mcp` with
+`CBM_CACHE_DIR=$HOME/.cache/codebase-memory-mcp` and an indexing boundary at
+`$HOME/code`. Headroom's CBM state is disabled; its managed binary and cache are
+retained for recovery. The personal skill lives under
+`$HOME/.agents/skills/codebase-memory`, with no additional hooks or agent profiles.
 
-| Setting | Effective value | Purpose |
-| --- | --- | --- |
-| `auto_index` | `true` | Initially indexes a new project when an MCP session connects |
-| `auto_index_limit` | `50000` | Maximum file count for automatic initial indexing |
-| `auto_watch` | `true` | Registers the connecting session's project with the background watcher |
-| `watcher_enabled` | `true` | Enables the background watcher subsystem |
+Automatic initial indexing is disabled to avoid indexing the parent workspace.
+The native watcher is enabled. Stable 0.12.1 watches only the active MCP session's
+repository: an explicit index of a different root refreshes that graph but does
+not add its watch. Open Codex in the target repository for auto-watch, or refresh
+selected targets explicitly when working from the parent workspace. Inspect
+`index_status` and exact-path coverage before relying on graph freshness.
 
-The owner enabled `auto_index`; the watcher settings retain their enabled
-defaults. To enable automatic initial indexing and inspect the effective
-configuration in the Headroom cache:
-
-```bash
-CBM_CACHE_DIR="$HOME/.local/share/Headroom/headroom/tools/codebase-memory-cache" \
-    "$HOME/.local/share/Headroom/headroom/bin/codebase-memory-mcp" \
-    config set auto_index true
-
-CBM_CACHE_DIR="$HOME/.local/share/Headroom/headroom/tools/codebase-memory-cache" \
-    "$HOME/.local/share/Headroom/headroom/bin/codebase-memory-mcp" \
-    config list
-```
-
-Automatic initial indexing applies to the detected project on session connection;
-it does not promise to discover every sibling repository under `$HOME/code`.
-Existing manually created indexes remain available after enabling `auto_index`
-and do not require a blanket reindex. The background watcher detects Git
-working-tree changes and updates registered projects incrementally while running.
-These settings were verified; an edit-to-index update was not exercised for every
-repository. If an index appears stale, request a refresh through
-`index_repository`, then inspect `index_status` and `check_index_coverage`.
-Automatic indexing still respects exclusions and can report parsing gaps.
-
-The shared `$HOME/code/AGENTS.md` defines the agent handoff: use vexp first for
-orientation when discovery is needed, and skip orientation when the task already
-identifies the files or symbols. Use Codebase Memory second for unresolved
-structural questions about callers, dependencies, call paths, or architecture,
-or when vexp is unavailable, degraded, or returns no useful pivots. Do not repeat
-discovery that vexp has already answered adequately.
-
-Select the Codebase Memory project matching the repository; query each relevant
-project for cross-repository work. Use `search_graph` for symbols, `trace_path`
-for relationships, and `get_architecture` for broader structure. Check coverage
-for files relied on, and read source directly where coverage is incomplete or
-freshness is uncertain. Use direct searches for literal strings, configuration,
-and excluded files. Current source is authoritative when either index disagrees;
-retain vexp completion checks and required repository tests.
-
-See the upstream [Codebase Memory configuration guide](https://github.com/DeusData/codebase-memory-mcp/blob/main/docs/CONFIGURATION.md)
-for setting defaults and daemon lifecycle details, and its
-[tool documentation](https://github.com/DeusData/codebase-memory-mcp#tools)
-for indexing and graph queries.
+The shared `$HOME/code/AGENTS.md` defines the handoff: vexp first for orientation
+when needed, Codebase Memory second for unresolved structural questions, and
+Serena for targeted symbol reads and edits. Select graphs by canonical root,
+follow pagination, and read source for incomplete or uncertain coverage. An
+empty graph result does not prove absence; retain repository validation.
 
 ### vexp indexing and IDE integration
 
@@ -997,6 +965,16 @@ The October 22 Harness Score addition installs the personal
 invocation, support distinctions, and discovery limits. The October 4 discovery
 counts above do not include this later installation.
 
+The November 4 CBM migration installs the personal `codebase-memory` adaptation.
+Its [maintained bundle](../../personal-codex-skills/skills/codebase-memory/SKILL.md),
+[provenance and maintenance](../../personal-codex-skills/docs/codebase-memory.md),
+and [sanitized evaluations](../../personal-codex-skills/evals/codebase-memory/README.md)
+live in `personal-codex-skills`. Fresh Ubuntu/WSL Codex discovery verified the
+enabled skill; native Windows discovery and model routing were not tested.
+This later addition does not revise the October 4 skill counts above. The
+[CBM lifecycle guide](codebase-memory-installation-and-lifecycle.md) owns the
+native server's workstation configuration and maintenance.
+
 On November 3, Clear Writing was updated from reviewed commit
 `75b81f09e32c2e139a0f0c5a2f58e5ad9ff47524`; all ten installed files matched
 the source after a verified backup and rollback rehearsal. Fresh Ubuntu/WSL
@@ -1064,7 +1042,7 @@ the actual plugin process has a verified owner-private temporary parent.
 | Playwright | Global Codex configuration; on-demand `@playwright/mcp` package | Browser inspection and automation |
 | Context7 | Context7 plugin and global remote-server registration | Current, version-specific library, framework, SDK, API, CLI, and cloud-service documentation |
 | Headroom | Desktop-managed runtime 0.39.0 and user-level Codex registration | Local compression, retrieval, and statistics tools; model proxy routing is configured separately |
-| Codebase Memory | Desktop-managed binary 0.11.0 and user-level Codex registration | Repository graph indexing and queries, architecture views, file outlines, and code snippets |
+| Codebase Memory | Standalone upstream release and existing user-level Codex registration; November 4 migration | Repository graph indexing and queries, architecture views, file outlines, and code snippets |
 | Serena | Headroom-managed `serena-agent` 1.7.0 environment and user-level Codex registration | Language-server-backed symbol navigation, selected function reads, and symbol editing |
 
 Context7 exposes `resolve-library-id` and `query-docs`. Resolve a library name

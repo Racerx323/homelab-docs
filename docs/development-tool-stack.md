@@ -993,6 +993,22 @@ See the
 [retest evidence](https://github.com/Racerx323/personal-codex-skills/blob/main/evals/clear-writing/routing-with-rule.json)
 for the exact rule, instruction hashes, and individual outputs.
 
+On November 9, the personal `change-control` skill was installed in WSL. Its
+[maintained bundle](../../personal-codex-skills/skills/change-control/SKILL.md)
+and [deployment guide](../../personal-codex-skills/docs/change-control.md)
+define a plan, work ledger, and result for substantial maintenance, deployments,
+and migrations. Existing equivalent records are reused. Repeatable operations
+and enduring architecture remain in their permanent documents, linked from the
+change record. A scoped workspace rule selects the skill for substantial changes
+and resumed tracked work; standalone assessments and routine fixes are excluded.
+
+All four deployed files matched source. Fresh Codex CLI 0.167.0 app-server
+discovery found the skill enabled without load errors from the development
+workspace and personal-skills repository. See
+[qualification](../../personal-codex-skills/evals/change-control/qualification.md).
+Model routing, long-project behavior, and native Windows/IDE discovery were not
+tested. This addition does not revise the earlier discovery counts above.
+
 #### Per-client capability inventory
 
 Observation date: October 4, 2026. Native Windows discovery used the Windows VS

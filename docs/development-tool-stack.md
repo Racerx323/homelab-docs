@@ -1021,8 +1021,13 @@ live in `personal-codex-skills`.
 Invoke `$book-to-skill` with a local source and the desired mode: conversion,
 analyze-only, generation from prior analysis, or fold-in. Generated skills default
 to private staging; installation and publication are separate actions. The
-adaptation reuses Headroom MarkItDown for PDF/Office documents and retains other
-upstream extraction support without installing optional dependencies. No
+adaptation asks technical versus text-heavy for automatic PDFs: Docling first for
+technical books; pdftotext, pypdf, then pdfminer.six for prose. MarkItDown is also
+an explicit PDF option and remains required for Office documents. EPUB prefers
+EbookLib plus BeautifulSoup before its stdlib fallback. A bounded first-page
+probe, when available, stops on no extracted text and offers separately run
+`ocrmypdf input.pdf output.pdf`. It retains other upstream extraction support
+without installing optional dependencies. No
 standalone pip CLI or duplicate document reader is added.
 
 There is no direct duplicate among the six existing personal skills. Clear Writing
@@ -1036,8 +1041,12 @@ counts above.
 All 26 deployed files matched their maintained source. Fresh Codex CLI 0.169.0
 app-server discovery found one enabled entry without load errors from both the
 development workspace and personal-skills repository. Thirteen synthetic runtime
-tests passed, including actual PDF/DOCX reading through MarkItDown. Conversion
-quality and automatic model routing were not independently evaluated.
+tests passed initially, including actual PDF/DOCX reading through MarkItDown.
+The subsequent PDF/EPUB revision adds real pypdf, PDFMiner, and
+EbookLib/BeautifulSoup checks plus mocked Poppler/Docling dispatch; see the
+qualification record for current results and interpreter-specific dependency
+availability. Conversion quality and automatic model routing were not
+independently evaluated.
 
 #### Per-client capability inventory
 

@@ -1009,6 +1009,36 @@ workspace and personal-skills repository. See
 Model routing, long-project behavior, and native Windows/IDE discovery were not
 tested. This addition does not revise the earlier discovery counts above.
 
+On November 17, the personal `book-to-skill` Codex adaptation was installed from
+reviewed upstream commit `e7bb659d3261491c8b28793dcb9102fa64a46c22`. It distills
+books and document collections into source-grounded reference skills: frameworks,
+chapter guides, glossaries, patterns, and decision aids. Its
+[maintained bundle](../../personal-codex-skills/skills/book-to-skill/SKILL.md),
+[overlap and maintenance assessment](../../personal-codex-skills/docs/book-to-skill.md),
+and [qualification](../../personal-codex-skills/evals/book-to-skill/qualification.md)
+live in `personal-codex-skills`.
+
+Invoke `$book-to-skill` with a local source and the desired mode: conversion,
+analyze-only, generation from prior analysis, or fold-in. Generated skills default
+to private staging; installation and publication are separate actions. The
+adaptation reuses Headroom MarkItDown for PDF/Office documents and retains other
+upstream extraction support without installing optional dependencies. No
+standalone pip CLI or duplicate document reader is added.
+
+There is no direct duplicate among the six existing personal skills. Clear Writing
+owns prose editing, managed `skill-creator` owns general authoring and metadata,
+and Book-to-Skill adds document distillation. It complements Codebase Memory's
+live source graphs and leaves the LikeC4, browser, harness, and change-record
+workflows in place. Native Windows/IDE discovery and automatic routing require
+separate verification. This addition does not revise the historical discovery
+counts above.
+
+All 26 deployed files matched their maintained source. Fresh Codex CLI 0.169.0
+app-server discovery found one enabled entry without load errors from both the
+development workspace and personal-skills repository. Thirteen synthetic runtime
+tests passed, including actual PDF/DOCX reading through MarkItDown. Conversion
+quality and automatic model routing were not independently evaluated.
+
 #### Per-client capability inventory
 
 Observation date: October 4, 2026. Native Windows discovery used the Windows VS

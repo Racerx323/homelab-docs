@@ -288,6 +288,7 @@ before making infrastructure changes.
 | Tool | Version | Purpose |
 | --- | --- | --- |
 | Ansible Core | 2.21.3 | Validates and runs reviewed host-configuration and orchestration playbooks |
+| Kuma CLI | 2.0.0 | WSL client. Version 2.0.0 cannot read the fleet inventory containing native NTP monitors |
 
 Install the minimal controller with pipx. Repository playbooks use only
 `ansible.builtin` modules, so Ansible Core supplies the required commands:
@@ -311,6 +312,58 @@ The syntax check parses the inventory and playbook without contacting a managed
 host. A check-mode or live playbook invocation can still execute read-only
 commands and requires the owning repository's reviewed command and
 authorization boundary.
+
+### Kuma CLI on WSL
+
+Use the standalone client from the [AutoKuma v2.0.0 release](https://github.com/BigBoot/AutoKuma/releases/tag/v2.0.0).
+The x86-64 WSL workstation connects to Kuma over its existing HTTPS endpoint.
+The Pi needs no additional software. To install this release from Bash:
+
+```bash
+(
+  set -e
+  work=$(mktemp -d)
+  trap 'rm -f "$work/kuma-linux"; rmdir "$work"' EXIT
+  cd "$work"
+  curl -fsSLO https://github.com/BigBoot/AutoKuma/releases/download/v2.0.0/kuma-linux
+  echo '191003ef8fc44ffbea055657244e58a532cc35bf62e964f91e241a82c9598c97  kuma-linux' | sha256sum -c -
+  install -Dm755 kuma-linux "$HOME/.local/bin/kuma"
+)
+kuma --version
+```
+
+**Pilot result, November 24, 2026.** CLI 2.0.0 received the monitor list from
+Kuma 2.5.9 and panicked while decoding the native `ntp` type. The readiness
+timeout followed that failure. Use the dashboard for administration. The DNS
+and status-page comparisons were never reached.
+
+**Retest when a client release supports native NTP.** Open a private WSL terminal. This read-only
+pilot uses your existing Kuma account and prints selected fields. Raw monitor
+records can contain the private external heartbeat URL. Keep shell tracing off.
+
+```bash
+(
+  set +x
+  set -eo pipefail
+  export KUMA__URL=https://uptime.local.theama.co
+  read -rp 'Kuma username: ' KUMA__USERNAME
+  read -rsp 'Kuma password: ' KUMA__PASSWORD; echo
+  export KUMA__USERNAME KUMA__PASSWORD
+  read -rsp 'Current MFA code, if enabled: ' code; echo
+  if [[ -n $code ]]; then export KUMA__MFA_TOKEN="$code"; fi
+  kuma monitor list | jq 'if type == "object" and has("error") then error(.error) else .[] | {id, name, active} end'
+  kuma monitor get 2 8 | jq '.[] | {id, dns_resolve_server, dns_resolve_type, expectedValue}'
+  kuma status-page get one | jq '{slug, publicGroupList: [.publicGroupList[]? | {name, ids: [.monitorList[].id]}]}'
+)
+```
+
+Compare the enabled IDs and names with the dashboard, the DNS fields with
+the [monitor coverage table](https://github.com/Racerx323/homelab-monitoring-observability/blob/main/uptime-kuma/docs/OPERATIONS.md#monitor-ownership-and-coverage),
+and the groups and membership with the published page at `/status/one`.
+A missing field means the CLI could not verify that setting. Use the dashboard
+for that comparison. See [Kuma operations](https://github.com/Racerx323/homelab-monitoring-observability/blob/main/uptime-kuma/docs/OPERATIONS.md)
+for administration and the [tagged CLI reference](https://github.com/BigBoot/AutoKuma/blob/v2.0.0/kuma-cli/README.md)
+for command options.
 
 ## AI-assisted development
 

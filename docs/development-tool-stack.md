@@ -1012,6 +1012,16 @@ automatically follow source edits. Codex-managed system skills and compatibility
 data remain under `$HOME/.codex/skills`. Use the Context7 plugin bundle rather
 than adding a duplicate personal entrypoint.
 
+Use `$project-cleanup-audit` to review a repository and its local storage for
+cleanup. Give it the project root and any known sibling consumers. The audit
+links proposed actions to storage paths, readers, owners and retention needs.
+During active work, use the audit to find duplicated guidance and identify
+which records still support open decisions. After promotion, use it to identify
+canonical architecture, operations and maintenance guidance and assess which
+work records can retire. The [operator guide](../../personal-codex-skills/docs/project-cleanup-audit.md)
+and [Nautobot example](../../personal-codex-skills/skills/project-cleanup-audit/references/nautobot.md)
+cover invocation and how to interpret the findings.
+
 The October 22 Harness Score addition installs the personal
 `harness-engineering` adaptation in WSL. See
 [Editor and agent integration](#editor-and-agent-integration) for its source,
